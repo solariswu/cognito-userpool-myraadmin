@@ -33,7 +33,7 @@ export const AMFATENANT_TABLE = `amfa-${stage_config[current_stage].env.account}
 
 export const app_userpool_info = {
 	needCreate: false,
-	userPoolId: 'eu-west-1_vitRQ9sum',
+	userPoolId: 'eu-west-1_QJkg4zItt',
 }
 
 export const hostedUI_domain = `${project_name}-${current_stage}001`;
