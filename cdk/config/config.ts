@@ -1,14 +1,15 @@
 export const project_name = 'adminportal';
-export const service_name = 'amfa';
 export const current_stage = 'dev';
 
-export const root_domain = `${project_name}-${current_stage}.${service_name}.aws-amplify.dev`;
+// don't change this value. It's different than the one in amfa.
+// this is not used in email header/footer.
+export const service_name = "amfa";
 
-export const logo_img_url = `https://${root_domain}/Logo.png`;
+export const logo_img_url = `https://${process.env.ADMINPORTAL_DOMAIN_NAME}/Logo.png`;
 
-export const tenant_id = 'amfa-dev004';
+export const tenant_id = process.env.TENANT_ID;
 
-export const amfa_api_base = `${tenant_id}.amfa.aws-amplify.dev`
+export const amfa_api_base = process.env.TENANT_ID+'.'+process.env.ROOT_DOMAIN_NAME;
 
 export const oidc_info = {
 	isNeeded: false,
@@ -20,26 +21,28 @@ export const oidc_info = {
 export const stage_config = {
 	dev : {
 		env: {
-			account: '531680862493',
-			region: 'eu-west-1',
+			account: process.env.CDK_DEPLOY_ACCOUNT,
+			region: process.env.CDK_DEPLOY_REGION,
 		},
-		hostedZoneId: 'Z03307471XQKJVRSQV99A',
-		domainName: `${root_domain}`,
+		hostedZoneId: process.env.ADMINPORTAL_HOSTED_ZONE_ID,
+		domainName: `${process.env.ADMINPORTAL_DOMAIN_NAME}`,
 	},
 }
 
-export const AMFACONFIG_TABLE = 'AmfaStack-amfaconfigamfadev0043E950B8A-189081ZBP9Q8G';
+export const AMFACONFIG_TABLE = `amfa-${stage_config[current_stage].env.account}-${stage_config[current_stage].env.region}-configtable`;
 export const AMFATENANT_TABLE = `amfa-${stage_config[current_stage].env.account}-${stage_config[current_stage].env.region}-tenanttable`;
 
 export const app_userpool_info = {
 	needCreate: false,
-	userPoolId: 'eu-west-1_QJkg4zItt',
+	userPoolId: process.env.APP_USERPOOL_ID,
 }
 
-export const hostedUI_domain = `${project_name}-${current_stage}001`;
-export const apps_urls = ['https://amfa.netlify.app/'];
-export const enduser_portal_callbackurls = ['http://localhost:5173/auth-callback', 'https://amfa-awsdemo-userportal.netlify.app/auth-callback', 'https://apersona.netlify.app/auth-callback'];
-export const enduser_portal_logouturls = ['http://localhost:5173', 'https://amfa-awsdemo-userportal.netlify.app', 'https://apersona.netlify.app'];
+export const hostedUI_domain = `${project_name}-${tenant_id}-${current_stage}`;
+export const apps_urls = [process.env.EXTRA_APP_URL ? process.env.EXTRA_APP_URL : ''];
+
+// End User - service providers portal URLs
+export const enduser_portal_callbackurls = [`${process.env.SP_PORTAL_URL}/auth-callback`];
+export const enduser_portal_logouturls = [`${process.env.SP_PORTAL_URL}`];
 
 // SAML proxy now is one single instance with static domain assigned
 // manually deployed

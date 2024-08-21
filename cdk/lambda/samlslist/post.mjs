@@ -100,7 +100,9 @@ export const postResData = async (payload, samlurl, dynamodbISP, cognitoISP, cog
                 body: JSON.stringify({
                     ...payload,
                     id: btoa(entityId),
+                    issuer: `https://cognito-idp.${process.env.AWS_REGION}.amazonaws.com/${process.env.USER_POOL_ID}`,
                     clientId: process.env.SAML_CLIENTID,
+                    clientSecret: process.env.SAML_CLIENTSECRET,
                     entityId
                 }), // body data type must match "Content-Type" header
             });

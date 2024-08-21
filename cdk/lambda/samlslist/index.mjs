@@ -23,7 +23,7 @@ export const handler = async (event) => {
             // invite new user
             const body = JSON.parse(event.body);
             console.log('POST data: ', body);
-            const postResult = await postResData(body.data, samlurl, dynamodb);
+            const postResult = await postResData(body.data, samlurl, dynamodb, null, event.headers.authorization);
 
             return {
                 statusCode: 200,

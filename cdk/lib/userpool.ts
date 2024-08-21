@@ -51,7 +51,7 @@ export class SSOUserPool {
     }
 
     if (!app_userpool_info.needCreate) {
-      this.appUserPoolId = app_userpool_info.userPoolId;
+      this.appUserPoolId = app_userpool_info.userPoolId ? app_userpool_info.userPoolId : '';
     }
     else {
       this.appUserPool = this.createUserPool('Apps');
@@ -200,8 +200,8 @@ export class SSOUserPool {
           authorizationCodeGrant: true,
         },
         scopes: [OAuthScope.OPENID, OAuthScope.PROFILE, OAuthScope.COGNITO_ADMIN],
-        callbackUrls: ['http://localhost:3000/', ...apps_urls],
-        logoutUrls: ['http://localhost:3000/', ...apps_urls],
+        callbackUrls: apps_urls,
+        logoutUrls: apps_urls,
       },
       userPoolClientName: 'hostedUIClient',
       supportedIdentityProviders: [

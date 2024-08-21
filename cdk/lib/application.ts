@@ -15,8 +15,8 @@ export interface AppStackProps extends StackProps {
   siteCertificate: Certificate;
   apiCertificate: Certificate;
   domainName: string;
-  hostedUIDomain: string;
-  hostedZoneId: string;
+  hostedUIDomain: string | undefined;
+  hostedZoneId: string | undefined;
   assetsPath: string;
   amfaBaseUrl: string;
 }
@@ -40,10 +40,11 @@ export class AppStack extends Stack {
     apigateway.attachAuthorizor(userPool);
 
     // enable admin api endpoints
-    apigateway.createAdminApiEndpoints(userPool.appUserPoolId, userPool.samlClient.userPoolClientId);
+    apigateway.createAdminApiEndpoints(userPool.appUserPoolId, userPool.samlClient.userPoolClientId,
+      userPool.samlClient.userPoolClientSecret.unsafeUnwrap());
     apigateway.createEndUserPortalApiEndpoints(userPool.appUserPoolId);
 
-    apigateway.attachMetadataS3 (webapp.s3bucket);
+    apigateway.attachMetadataS3(webapp.s3bucket);
 
     createPostDeploymentLambda(this,
       userPool.appUserPoolId,

@@ -80,7 +80,7 @@ export class SSOApiGateway {
                 S3_BASE_URL: `${stage_config[current_stage].domainName}`,
                 BUCKET: s3bucket.bucketName,
                 SERVICE_NAME: service_name,
-                TENANT_ID: tenant_id,
+                TENANT_ID: tenant_id ? tenant_id : 'unknown',
             }
         });
 
@@ -103,7 +103,7 @@ export class SSOApiGateway {
                 S3_BASE_URL: `${stage_config[current_stage].domainName}`,
                 BUCKET: s3bucket.bucketName,
                 SERVICE_NAME: service_name,
-                TENANT_ID: tenant_id,
+                TENANT_ID: tenant_id ? tenant_id : 'unknown',
             }
         });
 
@@ -179,7 +179,7 @@ export class SSOApiGateway {
 
     }
 
-    public createAdminApiEndpoints(userPoolId: string, samlClientId: string) {
+    public createAdminApiEndpoints(userPoolId: string, samlClientId: string, samlClientSecrect: string) {
         const resourceTypes = ['users', 'groups', 'idps', 'appclients'];
 
         resourceTypes.forEach(resourceType => {
@@ -215,7 +215,8 @@ export class SSOApiGateway {
             });
         });
 
-        const samlsListLambda = this.createAmfaSamlProxyLambda('samlslist', samlClientId, this.spinfoTable);
+        const samlsListLambda = this.createAmfaSamlProxyLambda('samlslist', 
+        samlClientId, samlClientSecrect, userPoolId, this.spinfoTable);
         // 👇 add route for GET /resource
         this.api.addRoutes({
             path: '/samls',
@@ -226,7 +227,8 @@ export class SSOApiGateway {
             ),
             authorizer: this.authorizor,
         });
-        const samlsLambda = this.createAmfaSamlProxyLambda('samls', samlClientId, this.spinfoTable);
+        const samlsLambda = this.createAmfaSamlProxyLambda('samls',
+        samlClientId, samlClientSecrect, userPoolId, this.spinfoTable);
         // 👇 add route for CRUD /resource/id
         this.api.addRoutes({
             path: '/samls/{id}',
@@ -401,7 +403,8 @@ export class SSOApiGateway {
         return lambda;
     }
 
-    private createAmfaSamlProxyLambda(lambdaName: string, samlClientId: string, spinfoTable: Table) {
+    private createAmfaSamlProxyLambda(lambdaName: string, samlClientId: string,
+        samlClientSecret: string, userPoolId: string, spinfoTable: Table) {
 
         let lambda = new Function(this.scope, lambdaName, {
             runtime: Runtime.NODEJS_20_X,
@@ -409,10 +412,12 @@ export class SSOApiGateway {
             code: Code.fromAsset(path.join(__dirname, `/../lambda/${lambdaName}`)),
             environment: {
                 SAML_CLIENTID: samlClientId,
+                SAML_CLIENTSECRET: samlClientSecret,
                 AMFA_BASE_URL: this.amfaBaseUrl,
                 AMFA_SPINFO_TABLE: spinfoTable.tableName,
                 SAMLPROXY_API_URL: samlproxy_api_url,
                 SAMLPROXY_RELOAD_URL: samlproxy_reload_url,
+                USER_POOL_ID: userPoolId,
             },
             timeout: Duration.minutes(5)
         });
@@ -507,7 +512,7 @@ export class SSOApiGateway {
             code: Code.fromAsset(path.join(__dirname, `/../lambda/${lambdaName}`)),
             environment: {
                 AMFACONFIG_TABLE: tableName,
-                TENANT_ID: tenant_id,
+                TENANT_ID: tenant_id ? tenant_id : 'unknown',
                 AMFATENANT_TABLE,
                 USERPOOL_ID: userpoolId,
             },

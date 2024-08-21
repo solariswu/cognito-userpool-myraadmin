@@ -43,7 +43,7 @@ export const handler = async (event) => {
 				const putResult = await putResData(payload.data, dynamodb);
 				return response(200, JSON.stringify({ data: putResult }));
 			case 'DELETE':
-				const deleteResult = await deleteResData(event.pathParameters?.id, samlurl, '', samlReloadUrl, dynamodb);
+				const deleteResult = await deleteResData(event.pathParameters?.id, samlurl, event.headers.authorization, samlReloadUrl, dynamodb);
 				return response(200, JSON.stringify({ data: deleteResult }));
 			case 'OPTIONS':
 				return response(200, JSON.stringify({ data: 'ok' }));

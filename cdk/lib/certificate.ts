@@ -16,7 +16,7 @@ interface CertificateResourcesProps {
 
 interface CertificateStackProps extends StackProps {
 	domain: string;
-	hostedZoneId: string;
+	hostedZoneId: string | undefined;
 }
 
 export class CertificateStack extends Stack {
@@ -28,20 +28,20 @@ export class CertificateStack extends Stack {
 
 		const certificateResources = new CertificateResources(this, `certificate-${current_stage}`, {
 			domain: props.domain,
-			hostedZoneId: props.hostedZoneId,
+			hostedZoneId: props.hostedZoneId ? props.hostedZoneId : '',
 		});
 
 		this.siteCertificate = certificateResources.siteCertificate;
 
-		if (props.crossRegionReferences) {
+		// if (props.crossRegionReferences) {
 
-			const webCertificateResources = new CertificateResources(this, `certificate-${current_stage}-web`, {
-				domain: `active.${props.domain}`,
-				hostedZoneId: props.hostedZoneId,
-			});
+		// 	const webCertificateResources = new CertificateResources(this, `certificate-${current_stage}-web`, {
+		// 		domain: `active.${props.domain}`,
+		// 		hostedZoneId: props.hostedZoneId ? props.hostedZoneId : '',
+		// 	});
 
-			this.websiteCertificate = webCertificateResources.siteCertificate;
-		}
+		// 	this.websiteCertificate = webCertificateResources.siteCertificate;
+		// }
 	}
 }
 
