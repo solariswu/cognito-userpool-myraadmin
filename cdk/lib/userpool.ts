@@ -11,7 +11,7 @@ import {
   UserPoolIdentityProviderOidc,
 } from 'aws-cdk-lib/aws-cognito';
 
-import { Duration } from 'aws-cdk-lib';
+import { Duration, Fn } from 'aws-cdk-lib';
 
 import { AppStackProps } from './application';
 import { apps_urls, current_stage, hostedUI_domain, project_name, oidc_info, app_userpool_info, service_name, enduser_portal_callbackurls, enduser_portal_logouturls } from '../config';
@@ -51,7 +51,10 @@ export class SSOUserPool {
     }
 
     if (!app_userpool_info.needCreate) {
-      this.appUserPoolId = app_userpool_info.userPoolId ? app_userpool_info.userPoolId : '';
+      const userpoolid = Fn.importValue('useridppoolid').toString();
+      // this.appUserPoolId = userpoolid
+      this.appUserPoolId = userpoolid && userpoolid.length > 1 ? userpoolid :
+        app_userpool_info.userPoolId ? app_userpool_info.userPoolId : '';
     }
     else {
       this.appUserPool = this.createUserPool('Apps');
@@ -122,7 +125,7 @@ export class SSOUserPool {
       },
       // no customer attribute
       // MFA optional
-      mfa: type === 'Admin'? Mfa.REQUIRED : Mfa.OPTIONAL,
+      mfa: type === 'Admin' ? Mfa.REQUIRED : Mfa.OPTIONAL,
       mfaSecondFactor: {
         sms: false,
         otp: true,
@@ -181,7 +184,7 @@ export class SSOUserPool {
         },
         scopes: [OAuthScope.EMAIL, OAuthScope.OPENID, OAuthScope.PROFILE, OAuthScope.COGNITO_ADMIN],
         callbackUrls: [`https://${this.domainName}`, 'http://localhost:5173', `https://${this.domainName}/auth-callback`, 'http://localhost:5173/auth-callback'],
-        logoutUrls: [`https://${this.domainName}`, 'http://localhost:5173', ],
+        logoutUrls: [`https://${this.domainName}`, 'http://localhost:5173',],
       },
       userPoolClientName: 'AdminPortalClient',
       supportedIdentityProviders,
