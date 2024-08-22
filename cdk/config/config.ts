@@ -25,7 +25,7 @@ export const stage_config = {
 			region: process.env.CDK_DEPLOY_REGION,
 		},
 		hostedZoneId: process.env.ADMINPORTAL_HOSTED_ZONE_ID,
-		domainName: `${process.env.ADMINPORTAL_DOMAIN_NAME}`,
+		domainName: process.env.ADMINPORTAL_DOMAIN_NAME,
 	},
 }
 

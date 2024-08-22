@@ -45,9 +45,9 @@ export class SSOApiGateway {
         this.region = props.env?.region;
         this.account = props.env?.account;
         this.certificateArn = props.apiCertificate.certificateArn;
-        this.domainName = props.domainName;
-        this.hostedZoneId = props.hostedZoneId;
-        this.hostedUIDomain = props.hostedUIDomain;
+        this.domainName = props.domainName ? props.domainName : '';
+        this.hostedZoneId = props.hostedZoneId ? props.hostedZoneId : '';
+        this.hostedUIDomain = props.hostedUIDomain ? props.hostedUIDomain : '';
         this.amfaBaseUrl = props.amfaBaseUrl;
 
         this.spinfoTable = this.createSPInfoTable();
@@ -509,7 +509,7 @@ export class SSOApiGateway {
         const lambda = new Function(this.scope, lambdaName, {
             runtime: Runtime.NODEJS_20_X,
             handler: 'index.handler',
-            code: Code.fromAsset(path.join(__dirname, `/../lambda/${lambdaName}`)),
+            code: Code.fromAsset(path.join(__dirname, `/../lambda/${lambdaName}/dist`)),
             environment: {
                 AMFACONFIG_TABLE: tableName,
                 TENANT_ID: tenant_id ? tenant_id : 'unknown',
