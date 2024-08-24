@@ -7,14 +7,14 @@ import { WebApplication } from './webapp';
 
 import { SSOApiGateway } from './httpapi';
 import { SSOUserPool } from './userpool';
-import { app_userpool_info, hostedUI_domain_prefix } from "../config";
+import { app_userpool_info } from "../config";
 import { createPostDeploymentLambda } from "./postDeployment";
 
 
 export interface AppStackProps extends StackProps {
   siteCertificate: Certificate;
   apiCertificate: Certificate;
-  domainName: string;
+  domainName: string | undefined;
   hostedUIDomain: string | undefined;
   hostedZoneId: string | undefined;
   assetsPath: string;
@@ -58,11 +58,11 @@ export class AppStack extends Stack {
     new CfnOutput(this, 'userPoolAdminAppClientId', { value: userPool.adminClient.userPoolClientId, });
 
     if (app_userpool_info.needCreate) {
-      new CfnOutput(this, 'Login Domain Name', { value: `https://${hostedUI_domain_prefix}.auth.${props.env?.region}.amazoncognito.com` });
+      new CfnOutput(this, 'Login Domain Name', { value: `https://${props.hostedUIDomain}.auth.${props.env?.region}.amazoncognito.com` });
       new CfnOutput(this, 'Hosted UI AppClientID', { value: userPool.hostedUIClient.userPoolClientId });
     }
 
-    new CfnOutput(this, 'Admin Login Hosted UI URL', { value: `${hostedUI_domain_prefix}.auth.${props.env?.region}.amazoncognito.com` });
+    new CfnOutput(this, 'Admin Login Hosted UI URL', { value: `${props.hostedUIDomain}.auth.${props.env?.region}.amazoncognito.com` });
 
     new CfnOutput(this, 'Application UserPoolID', { value: userPool.appUserPoolId });
 

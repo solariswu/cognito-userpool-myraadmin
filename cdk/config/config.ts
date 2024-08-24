@@ -9,7 +9,7 @@ export const logo_img_url = `https://${process.env.ADMINPORTAL_DOMAIN_NAME}/Logo
 
 export const tenant_id = process.env.TENANT_ID;
 
-export const amfa_api_base = process.env.TENANT_ID+'.'+process.env.ROOT_DOMAIN_NAME;
+export const amfa_api_base = process.env.TENANT_ID + '.' + process.env.ROOT_DOMAIN_NAME;
 
 export const oidc_info = {
 	isNeeded: false,
@@ -19,13 +19,13 @@ export const oidc_info = {
 }
 
 export const stage_config = {
-	dev : {
+	dev: {
 		env: {
 			account: process.env.CDK_DEPLOY_ACCOUNT,
 			region: process.env.CDK_DEPLOY_REGION,
 		},
 		hostedZoneId: process.env.ADMINPORTAL_HOSTED_ZONE_ID,
-		domainName: process.env.ADMINPORTAL_DOMAIN_NAME,
+		domainName: process.env.ADMINPORTAL_DOMAIN_NAME ? process.env.ADMINPORTAL_DOMAIN_NAME : "",
 	},
 }
 

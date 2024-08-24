@@ -38,7 +38,7 @@ export class SSOUserPool {
     this.scope = scope;
     this.account = props.env?.account;
     this.region = props.env?.region;
-    this.domainName = props.domainName;
+    this.domainName = props.domainName ? props.domainName: '';
 
     this.adminUserpool = this.createUserPool('Admin');
     this.adminClient = this.addAdminClient();

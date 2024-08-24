@@ -3,7 +3,7 @@ import 'source-map-support/register';
 import { App } from 'aws-cdk-lib';
 import { CertificateStack } from '../lib/certificate';
 import { AppStack } from '../lib/application';
-import { stage_config, current_stage, hostedUI_domain, amfa_api_base } from '../config';
+import { stage_config, current_stage, hostedUI_domain_prefix, amfa_api_base } from '../config';
 
 const app = new App();
 
@@ -30,7 +30,7 @@ const apiCertStack = new CertificateStack(app, 'APICertificateStack', {
 new AppStack(app, 'SSO-CUPStack', {
 	siteCertificate: certStack222.siteCertificate,
 	apiCertificate: apiCertStack.siteCertificate,
-	hostedUIDomain: hostedUI_domain,
+	hostedUIDomain: hostedUI_domain_prefix,
 	...stage_config[current_stage],
 	crossRegionReferences: certStack222.region !== stage_config[current_stage].env.region,
 	assetsPath: '../../dist',

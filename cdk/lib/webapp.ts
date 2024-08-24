@@ -31,7 +31,7 @@ export class WebApplication {
 
 	constructor(scope: Construct, props: AppStackProps) {
 		this.scope = scope;
-		this.domainName = props.domainName;
+		this.domainName = props.domainName ? props.domainName : '';
 		this.certificate = props.siteCertificate;
 		this.hostedZoneId = props.hostedZoneId ? props.hostedZoneId : '';
 		this.account = props.env?.account;
