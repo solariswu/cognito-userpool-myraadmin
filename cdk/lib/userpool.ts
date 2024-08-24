@@ -6,17 +6,17 @@ import {
   AccountRecovery,
   Mfa,
   UserPoolClientIdentityProvider,
-  ProviderAttribute,
-  OidcAttributeRequestMethod,
   UserPoolIdentityProviderOidc,
 } from 'aws-cdk-lib/aws-cognito';
 
 import { Duration, Fn } from 'aws-cdk-lib';
 
 import { AppStackProps } from './application';
-import { apps_urls, current_stage, hostedUI_domain, project_name, oidc_info, app_userpool_info, service_name, enduser_portal_callbackurls, enduser_portal_logouturls } from '../config';
-
-import { PolicyStatement, PolicyDocument, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import {
+  apps_urls, hostedUI_domain_prefix,
+  app_userpool_info, enduser_portal_callbackurls,
+  enduser_portal_logouturls
+} from '../config';
 
 
 export class SSOUserPool {
@@ -32,7 +32,6 @@ export class SSOUserPool {
   samlClient: UserPoolClient;
   enduserPortalClient: UserPoolClient;
   domainName: string;
-  importUserRole: Role;
   oidcProvider: UserPoolIdentityProviderOidc;
 
   constructor(scope: Construct, props: AppStackProps) {
@@ -42,57 +41,16 @@ export class SSOUserPool {
     this.domainName = props.domainName;
 
     this.adminUserpool = this.createUserPool('Admin');
-    if (oidc_info.isNeeded) {
-      this.oidcProvider = this.addOIDCProviderToAdminPool();
-    }
     this.adminClient = this.addAdminClient();
-    if (oidc_info.isNeeded) {
-      this.adminClient.node.addDependency(this.oidcProvider);
-    }
 
-    if (!app_userpool_info.needCreate) {
-      const userpoolid = Fn.importValue('useridppoolid').toString();
-      // this.appUserPoolId = userpoolid
-      this.appUserPoolId = userpoolid && userpoolid.length > 1 ? userpoolid :
-        app_userpool_info.userPoolId ? app_userpool_info.userPoolId : '';
-    }
-    else {
-      this.appUserPool = this.createUserPool('Apps');
-      this.appUserPoolId = this.appUserPool.userPoolId;
-      this.hostedUIClient = this.addHostedUIAppClient();
-      this.addHostedUIDomain();
-    }
+    const userpoolid = Fn.importValue('useridppoolid').toString();
+    // this.appUserPoolId = userpoolid
+    this.appUserPoolId = userpoolid && userpoolid.length > 1 ? userpoolid :
+      app_userpool_info.userPoolId ? app_userpool_info.userPoolId : '';
+
     this.samlClient = this.addSamlClient();
     this.enduserPortalClient = this.addEnduserPortalClient();
 
-    this.createImportUserRole();
-
-  }
-
-  private createImportUserRole() {
-    const importUserPolicyStatement = new PolicyDocument({
-      statements: [
-        new PolicyStatement({
-          actions: [
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:DescribeLogStreams",
-            "logs:PutLogEvents"
-          ],
-          resources: [
-            "arn:aws:logs:*:*:log-group:/aws/cognito/*"
-          ],
-        }),
-      ],
-    });
-
-    this.importUserRole = new Role(this.scope, 'ImportUserRole', {
-      assumedBy: new ServicePrincipal('cognito-idp.amazonaws.com'),
-      roleName: `${project_name}-ImportUserRole`,
-      inlinePolicies: {
-        CupImportUserPolicy: importUserPolicyStatement
-      }
-    });
   }
 
   private createUserPool = (type: string) => {
@@ -125,7 +83,7 @@ export class SSOUserPool {
       },
       // no customer attribute
       // MFA optional
-      mfa: type === 'Admin' ? Mfa.REQUIRED : Mfa.OPTIONAL,
+      mfa: Mfa.REQUIRED,
       mfaSecondFactor: {
         sms: false,
         otp: true,
@@ -135,43 +93,14 @@ export class SSOUserPool {
     });
   }
 
-
-  private addOIDCProviderToAdminPool() {
-    const issuerUrl = oidc_info.issuerUrl;
-    const clientId = oidc_info.clientId;
-    const clientSecret = oidc_info.clientSecret;
-
-    return new UserPoolIdentityProviderOidc(
-      this.scope,
-      'OIDCProvider',
-      {
-        clientId,
-        clientSecret,
-        issuerUrl,
-        userPool: this.adminUserpool,
-        // the properties below are optional
-        attributeMapping: {
-          email: ProviderAttribute.other('email'),
-        },
-        attributeRequestMethod: OidcAttributeRequestMethod.GET,
-        identifiers: ['myoidc'],
-        name: 'myoidc',
-        scopes: ['openid email phone'],
-      }
-    );
-  };
-
   private addAdminClient() {
     this.adminUserpool.addDomain('adminHostedUI-domain', {
       cognitoDomain: {
-        domainPrefix: `${service_name}-${project_name}-${current_stage}001`,
+        domainPrefix: hostedUI_domain_prefix,
       },
     });
 
     const supportedIdentityProviders = [UserPoolClientIdentityProvider.COGNITO];
-    if (oidc_info.isNeeded) {
-      supportedIdentityProviders.push(UserPoolClientIdentityProvider.custom('myoidc'));
-    }
     return new UserPoolClient(this.scope, 'adminClient', {
       userPool: this.adminUserpool,
       generateSecret: false,
@@ -190,37 +119,6 @@ export class SSOUserPool {
       supportedIdentityProviders,
     });
   }
-
-  private addHostedUIAppClient() {
-    return new UserPoolClient(this.scope, 'hostedUIClient', {
-      userPool: this.appUserPool,
-      generateSecret: false,
-      authFlows: {
-        userSrp: true,
-      },
-      oAuth: {
-        flows: {
-          authorizationCodeGrant: true,
-        },
-        scopes: [OAuthScope.OPENID, OAuthScope.PROFILE, OAuthScope.COGNITO_ADMIN],
-        callbackUrls: apps_urls,
-        logoutUrls: apps_urls,
-      },
-      userPoolClientName: 'hostedUIClient',
-      supportedIdentityProviders: [
-        UserPoolClientIdentityProvider.COGNITO,
-      ],
-    });
-  };
-
-  private addHostedUIDomain(
-  ) {
-    return this.appUserPool.addDomain('hostedUI-domain', {
-      cognitoDomain: {
-        domainPrefix: hostedUI_domain,
-      },
-    });
-  };
 
   private addSamlClient() {
 
@@ -263,6 +161,5 @@ export class SSOUserPool {
       supportedIdentityProviders: [UserPoolClientIdentityProvider.custom('apersona')],
     });
   };
-
 
 }

@@ -1,9 +1,9 @@
-export const project_name = 'adminportal';
-export const current_stage = 'dev';
-
 // don't change this value. It's different than the one in amfa.
 // this is not used in email header/footer.
 export const service_name = "amfa";
+
+export const project_name = 'adminportal';
+export const current_stage = 'dev';
 
 export const logo_img_url = `https://${process.env.ADMINPORTAL_DOMAIN_NAME}/Logo.png`;
 
@@ -37,7 +37,7 @@ export const app_userpool_info = {
 	userPoolId: process.env.APP_USERPOOL_ID,
 }
 
-export const hostedUI_domain = `${project_name}-${tenant_id}-${current_stage}`;
+export const hostedUI_domain_prefix = `${project_name}-${tenant_id}-${stage_config[current_stage].env.account}`;
 export const apps_urls = [process.env.EXTRA_APP_URL ? process.env.EXTRA_APP_URL : ''];
 
 // End User - service providers portal URLs

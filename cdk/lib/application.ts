@@ -7,7 +7,7 @@ import { WebApplication } from './webapp';
 
 import { SSOApiGateway } from './httpapi';
 import { SSOUserPool } from './userpool';
-import { hostedUI_domain, service_name, current_stage, app_userpool_info, project_name } from "../config";
+import { app_userpool_info, hostedUI_domain_prefix } from "../config";
 import { createPostDeploymentLambda } from "./postDeployment";
 
 
@@ -58,11 +58,11 @@ export class AppStack extends Stack {
     new CfnOutput(this, 'userPoolAdminAppClientId', { value: userPool.adminClient.userPoolClientId, });
 
     if (app_userpool_info.needCreate) {
-      new CfnOutput(this, 'Login Domain Name', { value: `https://${hostedUI_domain}.auth.${props.env?.region}.amazoncognito.com` });
+      new CfnOutput(this, 'Login Domain Name', { value: `https://${hostedUI_domain_prefix}.auth.${props.env?.region}.amazoncognito.com` });
       new CfnOutput(this, 'Hosted UI AppClientID', { value: userPool.hostedUIClient.userPoolClientId });
     }
 
-    new CfnOutput(this, 'Admin Login Hosted UI URL', { value: `${service_name}-${project_name}-${current_stage}001.auth.${props.env?.region}.amazoncognito.com` });
+    new CfnOutput(this, 'Admin Login Hosted UI URL', { value: `${hostedUI_domain_prefix}.auth.${props.env?.region}.amazoncognito.com` });
 
     new CfnOutput(this, 'Application UserPoolID', { value: userPool.appUserPoolId });
 

@@ -33,7 +33,7 @@ export class WebApplication {
 		this.scope = scope;
 		this.domainName = props.domainName;
 		this.certificate = props.siteCertificate;
-		this.hostedZoneId = props.hostedZoneId;
+		this.hostedZoneId = props.hostedZoneId ? props.hostedZoneId : '';
 		this.account = props.env?.account;
 		this.region = props.env?.region;
 		this.assetsPath = props.assetsPath;
@@ -96,9 +96,9 @@ export class WebApplication {
 	}
 
 	private createRoute53ARecord(distribution: Distribution): ARecord {
-		const name = `${project_name}-${current_stage}-Route53ARecordSet-${'main'}`;
+		const name = `${project_name}-${current_stage}-Route53ARecordSet-main`;
 		return new ARecord(this.scope, name, {
-			zone: PublicHostedZone.fromPublicHostedZoneAttributes(this.scope, `apiHostedZone-${current_stage}-${'main'}`, {
+			zone: PublicHostedZone.fromPublicHostedZoneAttributes(this.scope, `apiHostedZone-${current_stage}-main`, {
 				hostedZoneId: this.hostedZoneId,
 				zoneName: this.domainName,
 			}),
