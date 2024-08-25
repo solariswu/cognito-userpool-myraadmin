@@ -75,7 +75,7 @@ export const handler = async (event) => {
 	return response(200, JSON.stringify({
 		amfaConfigs: JSON.parse(configRes.value.Item.value.S),
 		amfaPolicies: JSON.parse(policyRes.value.Item.value.S),
-		samlProxyEnabled: samlRes.value.Item.samlproxy?.BOOL,
+		samlProxyEnabled: samlRes.value.Item?.samlproxy?.BOOL,
 		totalUserNumber: cognitoRes.value.UserPool.EstimatedNumberOfUsers,
 	}));
 

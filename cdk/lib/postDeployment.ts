@@ -7,7 +7,7 @@ import { Duration } from 'aws-cdk-lib';
 
 import * as path from 'path';
 
-import { current_stage, samlproxy_base_url, stage_config, AMFACONFIG_TABLE } from '../config';
+import { current_stage, samlproxy_base_url, stage_config, AMFATENANT_TABLE } from '../config';
 
 export const createPostDeploymentLambda = (
     scope: Construct,
@@ -23,12 +23,14 @@ export const createPostDeploymentLambda = (
         handler: 'index.handler',
         code: Code.fromAsset(path.join(__dirname + `/../lambda/${lambdaName}`)),
         environment: {
-            AMFACONFIG_TABLE,
+            AMFATENANT_TABLE,
             USERPOOL_ID: userPoolId,
             ADMINPOOL_ID: adminPoolId,
             CLIENT_ID: clientId,
             SAML_CLIENT_ID: samlClientId,
             SAML_CALLBACK_URL: samlproxy_base_url + samlClientId,
+            ROOT_DOMAIN_NAME: stage_config[current_stage].domainName,
+            TENANT_ID: process.env.TENANT_ID? process.env.TENANT_ID : 'unknown',
         },
         timeout: Duration.minutes(5),
     });
@@ -57,9 +59,9 @@ export const createPostDeploymentLambda = (
                 }),
                 new PolicyStatement({
                     actions: [
-                        'dynamodb:GetItem',
+                        'dynamodb:PutItem',
                     ],
-                    resources: [`arn:aws:dynamodb:${stage_config[current_stage].env.region}:${stage_config[current_stage].env.account}:table/${AMFACONFIG_TABLE}`],
+                    resources: [`arn:aws:dynamodb:${stage_config[current_stage].env.region}:${stage_config[current_stage].env.account}:table/${AMFATENANT_TABLE}`],
                 }),
             ],
         })
