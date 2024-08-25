@@ -37,7 +37,7 @@ export const app_userpool_info = {
 	userPoolId: process.env.APP_USERPOOL_ID,
 }
 
-export const hostedUI_domain_prefix = `${project_name}-${tenant_id}-${stage_config[current_stage].env.account}`;
+export const hostedUI_domain_prefix = `${project_name}-${tenant_id}`;
 export const apps_urls = [process.env.EXTRA_APP_URL ? process.env.EXTRA_APP_URL : ''];
 
 // End User - service providers portal URLs

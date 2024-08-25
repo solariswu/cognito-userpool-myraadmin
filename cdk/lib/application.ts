@@ -55,14 +55,14 @@ export class AppStack extends Stack {
 
     new CfnOutput(this, 'AdminPortal UserPoolId', { value: userPool.adminUserpool.userPoolId, });
 
-    new CfnOutput(this, 'userPoolAdminAppClientId', { value: userPool.adminClient.userPoolClientId, });
+    new CfnOutput(this, 'AdminPortal AppClientId', { value: userPool.adminClient.userPoolClientId, });
 
     if (app_userpool_info.needCreate) {
       new CfnOutput(this, 'Login Domain Name', { value: `https://${props.hostedUIDomain}.auth.${props.env?.region}.amazoncognito.com` });
       new CfnOutput(this, 'Hosted UI AppClientID', { value: userPool.hostedUIClient.userPoolClientId });
     }
 
-    new CfnOutput(this, 'Admin Login Hosted UI URL', { value: `${props.hostedUIDomain}.auth.${props.env?.region}.amazoncognito.com` });
+    new CfnOutput(this, 'Admin Login Hosted UI URL', { value: `https://${props.hostedUIDomain}.auth.${props.env?.region}.amazoncognito.com` });
 
     new CfnOutput(this, 'Application UserPoolID', { value: userPool.appUserPoolId });
 
