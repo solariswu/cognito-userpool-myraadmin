@@ -65,7 +65,7 @@ export class WebApplication {
 		name = 'Distribution-main';
 		const distribution = new Distribution(this.scope, name, {
 			defaultRootObject: 'index.html',
-			domainNames: [`${this.domainName}`],
+			domainNames: [this.domainName],
 			certificate:  this.certificate,
 			defaultBehavior: {
 				origin: new S3Origin(bucket, { originAccessIdentity }),

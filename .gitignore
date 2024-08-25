@@ -29,3 +29,5 @@ cdk.out
 cdk/config/*.js
 cdk/lambda/*/dist/*
 cdk.context.json
+dist
+dist/*
