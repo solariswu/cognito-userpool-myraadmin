@@ -23,7 +23,6 @@ export const createPostDeploymentLambda = (
         handler: 'index.handler',
         code: Code.fromAsset(path.join(__dirname + `/../lambda/${lambdaName}`)),
         environment: {
-            AMFATENANT_TABLE,
             USERPOOL_ID: userPoolId,
             ADMINPOOL_ID: adminPoolId,
             CLIENT_ID: clientId,
@@ -56,12 +55,6 @@ export const createPostDeploymentLambda = (
                         'cognito-idp:UpdateUserPoolClient',
                     ],
                     resources: [`arn:aws:cognito-idp:${stage_config[current_stage].env.region}:*:userpool/${userPoolId}`],
-                }),
-                new PolicyStatement({
-                    actions: [
-                        'dynamodb:PutItem',
-                    ],
-                    resources: [`arn:aws:dynamodb:${stage_config[current_stage].env.region}:${stage_config[current_stage].env.account}:table/${AMFATENANT_TABLE}`],
                 }),
             ],
         })
