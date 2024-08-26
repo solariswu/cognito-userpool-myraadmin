@@ -51,8 +51,11 @@ export const handler = async (event) => {
             });
             console.log('fetch samlurl res', res)
 
-            const resData = await res.json();
-            console.log('fetch samlurl resData', resData)
+            const resJson = await res.json();
+            console.log('fetch samlurl resJson', resJson)
+            let resData = []
+            for (var i in resJson)
+                resData.push(resJson[i])
 
             let data = []
 
