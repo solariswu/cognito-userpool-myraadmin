@@ -41,7 +41,14 @@ export const handler = async (event) => {
         else {
             let NextToken = event.body ? event.body : "";
 
-            const res = await fetch(samlurl);
+            const res = await fetch(samlurl, {
+                method: "POST", // *GET, POST, PUT, DELETE, etc.
+                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": event.headers.authorization,
+                },
+            });
             console.log('fetch samlurl res', res)
 
             const resData = await res.json();
@@ -50,7 +57,7 @@ export const handler = async (event) => {
             let data = []
             for (var item in resData) {
 
-                console.log ('samlslist getting item with id from ddb', resData[item].id)
+                console.log('samlslist getting item with id from ddb', resData[item].id)
 
                 const params = {
                     TableName: process.env.AMFA_SPINFO_TABLE,
@@ -83,7 +90,7 @@ export const handler = async (event) => {
                     name: resData[item].name,
                     metadataUrl: resData[item].metadataUrl,
                     entityId: resData[item].entityId,
-                    released: spInfo.released,
+                    released: spInfo?.released,
                     logoUrl: spInfo?.logoUrl,
                     serviceUrl: spInfo?.serviceUrl,
                 })
