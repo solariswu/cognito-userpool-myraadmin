@@ -55,47 +55,49 @@ export const handler = async (event) => {
             console.log('fetch samlurl resData', resData)
 
             let data = []
-            for (var item in resData) {
 
-                console.log('samlslist getting item with id from ddb', resData[item].id)
+            if (resData.length > 0 && resData[0].id) {
+                for (var item in resData) {
 
-                const params = {
-                    TableName: process.env.AMFA_SPINFO_TABLE,
-                    Key: {
-                        id: { S: `#SAML#${resData[item].id}` },
-                    },
-                };
+                    console.log('samlslist getting item with id from ddb', resData[item].id)
 
-                let spInfo = null;
+                    const params = {
+                        TableName: process.env.AMFA_SPINFO_TABLE,
+                        Key: {
+                            id: { S: `#SAML#${resData[item].id}` },
+                        },
+                    };
 
-                try {
-                    const spInfoRes = await dynamodb.send(new GetItemCommand(params));
+                    let spInfo = null;
 
-                    console.log('samlslist get spInfo from dynamodb Res', spInfoRes)
+                    try {
+                        const spInfoRes = await dynamodb.send(new GetItemCommand(params));
 
-                    if (spInfoRes?.Item?.id) {
-                        spInfo = {
-                            logoUrl: spInfoRes?.Item?.logoUrl?.S,
-                            serviceUrl: spInfoRes?.Item?.serviceUrl?.S,
-                            released: spInfoRes?.Item?.released?.BOOL ? spInfoRes?.Item?.released?.BOOL : false,
+                        console.log('samlslist get spInfo from dynamodb Res', spInfoRes)
+
+                        if (spInfoRes?.Item?.id) {
+                            spInfo = {
+                                logoUrl: spInfoRes?.Item?.logoUrl?.S,
+                                serviceUrl: spInfoRes?.Item?.serviceUrl?.S,
+                                released: spInfoRes?.Item?.released?.BOOL ? spInfoRes?.Item?.released?.BOOL : false,
+                            }
                         }
                     }
-                }
-                catch (e) {
-                    console.log('samlslist get spInfo from dynamodb error', e)
-                }
+                    catch (e) {
+                        console.log('samlslist get spInfo from dynamodb error', e)
+                    }
 
-                data.push({
-                    id: resData[item].id,
-                    name: resData[item].name,
-                    metadataUrl: resData[item].metadataUrl,
-                    entityId: resData[item].entityId,
-                    released: spInfo?.released,
-                    logoUrl: spInfo?.logoUrl,
-                    serviceUrl: spInfo?.serviceUrl,
-                })
+                    data.push({
+                        id: resData[item].id,
+                        name: resData[item].name,
+                        metadataUrl: resData[item].metadataUrl,
+                        entityId: resData[item].entityId,
+                        released: spInfo?.released,
+                        logoUrl: spInfo?.logoUrl,
+                        serviceUrl: spInfo?.serviceUrl,
+                    })
+                }
             }
-
             // getList of React-admin expects response to have header called 'Content-Range'.
             // when we add new header in response, we have to acknowledge it, so 'Access-Control-Expose-Headers'
             const page = parseInt(event.queryStringParameters.page);
