@@ -215,7 +215,7 @@ export class SSOApiGateway {
             });
         });
 
-        const samlsListLambda = this.createAmfaSamlProxyLambda('samlslist', 
+        const samlsListLambda = this.createAmfaSamlSpsLambda('samlslist', 
         samlClientId, samlClientSecrect, userPoolId, this.spinfoTable);
         // 👇 add route for GET /resource
         this.api.addRoutes({
@@ -227,7 +227,7 @@ export class SSOApiGateway {
             ),
             authorizer: this.authorizor,
         });
-        const samlsLambda = this.createAmfaSamlProxyLambda('samls',
+        const samlsLambda = this.createAmfaSamlSpsLambda('samls',
         samlClientId, samlClientSecrect, userPoolId, this.spinfoTable);
         // 👇 add route for CRUD /resource/id
         this.api.addRoutes({
@@ -403,13 +403,13 @@ export class SSOApiGateway {
         return lambda;
     }
 
-    private createAmfaSamlProxyLambda(lambdaName: string, samlClientId: string,
+    private createAmfaSamlSpsLambda(lambdaName: string, samlClientId: string,
         samlClientSecret: string, userPoolId: string, spinfoTable: Table) {
 
         let lambda = new Function(this.scope, lambdaName, {
             runtime: Runtime.NODEJS_20_X,
             handler: 'index.handler',
-            code: Code.fromAsset(path.join(__dirname, `/../lambda/${lambdaName}`)),
+            code: Code.fromAsset(path.join(__dirname, `/../lambda/${lambdaName}/dist`)),
             environment: {
                 SAML_CLIENTID: samlClientId,
                 SAML_CLIENTSECRET: samlClientSecret,
