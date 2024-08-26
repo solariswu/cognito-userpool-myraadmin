@@ -42,7 +42,7 @@ export const handler = async (event) => {
             let NextToken = event.body ? event.body : "";
 
             const res = await fetch(samlurl, {
-                method: "POST", // *GET, POST, PUT, DELETE, etc.
+                method: "GET", // *GET, POST, PUT, DELETE, etc.
                 cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
                 headers: {
                     "Content-Type": "application/json",
