@@ -128,6 +128,7 @@ export const postResData = async (payload, samlurl, dynamodbISP, cognitoISP, cog
                 name: payload.name,
                 logoUrl: payload.logoUrl,
                 serviceUrl: payload.serviceUrl,
+                released: payload.released,
             }, dynamodbISP);
 
             return response.json();
