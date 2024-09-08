@@ -40,13 +40,13 @@ export const AppClientCreate = () => {
         if (!sp?.spcallback) {
           errors.serviceProviders[idx].spcallback = 'Service Provider Callback Url is required';
         }
-        else if (!isHttpsOrHttpLocal()(sp.spcallback)) {
+        else if (isHttpsOrHttpLocal()(sp.spcallback)) {
             errors.serviceProviders[idx].spcallback = 'URL must start with http://localhost or https://';
         }
         if (!sp?.sploginurl) {
           errors.serviceProviders[idx].sploginurl = 'Service Provider Login Url is required';
         }
-        if (sp.splogoutcallback !== undefined && !sp.splogoutcallback && sp.splogoutcallback?.length > 0 && !(isHttpsOrHttpLocal()(sp.splogoutcallback))) {
+        if (sp.splogoutcallback !== undefined && !sp.splogoutcallback && sp.splogoutcallback?.length > 0 && (isHttpsOrHttpLocal()(sp.splogoutcallback))) {
           errors.serviceProviders[idx].splogoutcallback = 'URL must start with http://localhost or https://';
         }
       })
