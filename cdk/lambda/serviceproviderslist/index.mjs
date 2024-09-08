@@ -11,8 +11,15 @@ const cognitoISP = new CognitoIdentityProviderClient({ region: process.env.AWS_R
 const samlurl = process.env.SAMLPROXY_API_URL;
 const Limit = 60;
 
-const getSAMLSpInfo = async (dynamodb) => {
-    const res = await fetch(samlurl);
+const getSAMLSpInfo = async (dynamodb, cognitoToken) => {
+    const res = await fetch(samlurl, {
+        method: "GET",
+        cache: "no-cache",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": cognitoToken,
+        }
+    });
     console.log('fetch samlurl res', res)
 
     const resData = await res.json();
@@ -110,6 +117,7 @@ export const handler = async (event) => {
     console.info("EVENT\n" + JSON.stringify(event, null, 2))
 
     let errMsg = { type: 'exception', message: 'Service Error' };
+    const cognitoToken = event.headers.authorization;
 
     try {
 
@@ -145,7 +153,7 @@ export const handler = async (event) => {
             }
         }
 
-        const samlsps = await getSAMLSpInfo(dynamodbISP);
+        const samlsps = await getSAMLSpInfo(dynamodbISP, cognitoToken);
 
         samlsps.forEach(samlsp => {
             // hide non-released sp from end user

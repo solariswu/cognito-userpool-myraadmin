@@ -33,17 +33,19 @@ export const handler = async (event) => {
 		};
 	};
 
+	const cognitoToken = event.headers.authorization;
+
 	try {
 		switch (event.requestContext.http.method) {
 			case 'GET':
-				const getResult = await getResData(event.pathParameters?.id, samlurl, dynamodb);
+				const getResult = await getResData(event.pathParameters?.id, samlurl, dynamodb, cognitoToken);
 				return response(200, JSON.stringify({ data: getResult }));
 			case 'PUT':
 				const payload = JSON.parse(event.body);
 				const putResult = await putResData(payload.data, dynamodb);
 				return response(200, JSON.stringify({ data: putResult }));
 			case 'DELETE':
-				const deleteResult = await deleteResData(event.pathParameters?.id, samlurl, event.headers.authorization, samlReloadUrl, dynamodb);
+				const deleteResult = await deleteResData(event.pathParameters?.id, samlurl, cognitoToken, samlReloadUrl, dynamodb);
 				return response(200, JSON.stringify({ data: deleteResult }));
 			case 'OPTIONS':
 				return response(200, JSON.stringify({ data: 'ok' }));
