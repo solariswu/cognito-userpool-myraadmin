@@ -32,7 +32,7 @@ export default function AttributesMapping() {
 					<FunctionField render={(record => {
 						console.log('record', record)
 						const supportedScopes = record.supportedScopes?.split(' ');
-						return supportedScopes.map((scope, index) => <Typography key={index} variant="body2" color="text.secondary"> {scope} </Typography> )
+						return supportedScopes?.map((scope, index) => <Typography key={index} variant="body2" color="text.secondary"> {scope} </Typography> )
 						})} />
 				</Grid>
 			</Grid>
