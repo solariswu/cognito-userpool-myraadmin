@@ -17,7 +17,6 @@ export default function ServiceProviderForm(props) {
         }
     }
 
-
     return (
         <React.Fragment>
             <Typography variant="h6" gutterBottom>
@@ -58,6 +57,7 @@ export default function ServiceProviderForm(props) {
                                                 label="Service Provider SignIn Callback"
                                                 source={getSource("spcallback")}
                                                 validate={[required(), isHttpsOrHttpLocal]}
+                                                defaultValue={'http://localhost'}
                                             />
                                             <TextInput
                                                 fullWidth
