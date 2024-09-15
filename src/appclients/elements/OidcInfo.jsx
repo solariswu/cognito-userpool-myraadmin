@@ -105,8 +105,6 @@ export default function OidcInfo() {
                         title={'OAuth2 revoke Endpoint'} source={'revokeEndpoint'} showCopy={record.revokeEndpoint} />)} />
                     <FunctionField render={(record => <DispCardItem
                         title={'OAuth2 EndSession Endpoint'} source={'endSessionEndpoint'} showCopy={record.endSessionEndpoint} />)} />
-                    <FunctionField render={(record => <DispCardItem
-                        title={'OAuth2 Supported Scopes'} source={'supportedScopes'} showCopy={record.supportedScopes} />)} />
                     <DispFixCardItem title={'Response mode'} content={'query'} />
                     <DispFixCardItem title={'OAuth grant types'} content={'Authorization code grant'} />
                 </AccordionDetails>
