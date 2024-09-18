@@ -5,6 +5,7 @@ import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutli
 import { ArrayInput, BooleanInput, FormDataConsumer, SimpleFormIterator, TextInput, required } from 'react-admin';
 import { Box, IconButton } from '@mui/material';
 import { isHttpsOrHttpLocal } from '../../utils/validation';
+import { SPPortalUrl } from '../../amfaext';
 
 export default function ServiceProviderForm(props) {
     const [selected, setSelected] = React.useState(null)
@@ -70,6 +71,7 @@ export default function ServiceProviderForm(props) {
                                                 label="Service Provider Login Url"
                                                 source={getSource("sploginurl")}
                                                 validate={[required()]}
+                                                defaultValue={SPPortalUrl}
                                             />
                                             <TextInput
                                                 fullWidth
