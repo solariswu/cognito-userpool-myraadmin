@@ -46,6 +46,7 @@ export const handler = async (event) => {
             NextToken = data.LastEvaluatedKey
 
             let resData = [];
+            console.log ('fetched data:', data);
             if (data && data.Items && data.Items.length > 0) {
                 resData = data.Items.map(item => {
                     return {
