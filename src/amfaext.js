@@ -1,3 +1,4 @@
-export const AdminPortalUserPoolId="ap-southeast-2_cAhxKfhaD"
-export const AdminPortalClientId="3sckpkkd4ekbqn8a8b2q0crhk9"
-export const AdminHostedUIURL="https://adminportal-amfa-dev007-418272765285.auth.ap-southeast-2.amazoncognito.com"
+export const AdminPortalUserPoolId="eu-west-1_ibOks955Q"
+export const AdminPortalClientId="4kbb8vveiplsjqdb8onaldv7nq"
+export const AdminHostedUIURL="https://adminportal-amfa-dev004.auth.eu-west-1.amazoncognito.com"
+export const SPPortalUrl="https://apersona.netlify.app"
