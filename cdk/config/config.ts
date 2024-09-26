@@ -38,7 +38,7 @@ export const app_userpool_info = {
 }
 
 export const hostedUI_domain_prefix = `${project_name}-${tenant_id}`;
-export const apps_urls = [process.env.EXTRA_APP_URL ? process.env.EXTRA_APP_URL : ''];
+// export const apps_urls = [process.env.EXTRA_APP_URL ? process.env.EXTRA_APP_URL : ''];
 
 // End User - service providers portal URLs
 export const enduser_portal_callbackurls = [`${process.env.SP_PORTAL_URL}/auth-callback`];

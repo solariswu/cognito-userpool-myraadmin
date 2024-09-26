@@ -13,7 +13,7 @@ import { Duration, Fn } from 'aws-cdk-lib';
 
 import { AppStackProps } from './application';
 import {
-  apps_urls, hostedUI_domain_prefix,
+  hostedUI_domain_prefix,
   app_userpool_info, enduser_portal_callbackurls,
   enduser_portal_logouturls
 } from '../config';
@@ -133,8 +133,8 @@ export class SSOUserPool {
           authorizationCodeGrant: true,
         },
         scopes: [OAuthScope.OPENID, OAuthScope.PROFILE, OAuthScope.EMAIL],
-        callbackUrls: ['http://localhost:3000/', ...apps_urls],
-        logoutUrls: ['http://localhost:3000/', ...apps_urls],
+        callbackUrls: ['http://localhost:3000/'/*, ...apps_urls*/],
+        logoutUrls: ['http://localhost:3000/'/*, ...apps_urls*/],
       },
       userPoolClientName: 'samlproxyClient',
       supportedIdentityProviders: [UserPoolClientIdentityProvider.custom('apersona')],
