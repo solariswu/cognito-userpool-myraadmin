@@ -57,9 +57,13 @@ const dataProvider = {
 
                 return ({
                     data: json.data,
+                    // pageInfo: {
+                    //     hasPreviousPage: false,
+                    //     hasNextPage: true,
+                    // }
                     pageInfo: {
-                        hasNextPage: json.PaginationToken ? true : false,
-                        hasPreviousPage: page > 1,
+                        hasPreviousPage: page > 1 ? true : false,
+                        ...json.PaginationToken && { hasNextPage: true }
                     },
                 })
             })
