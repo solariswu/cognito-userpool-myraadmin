@@ -30,58 +30,59 @@ export default function ServiceProviderForm(props) {
                         {({
                             formData, // The whole form data
                             scopedFormData, // The data for this item of the ArrayInput
-                            getSource, // A function to get the valid source inside an ArrayInput
+                            // source, // A function to get the valid source inside an ArrayInput
                             ...rest
                         }) => {
                             // console.log('spformdata', scopedFormData, ' selected', selected, 'getSource', getSource('spname'))
+                            // console.log('spformdata', scopedFormData, ' selected', selected )
                             return (
                                 <>
-                                    <Box sx={{ display: 'flex', mb: 2 }} onClick={() => handleClick(getSource('spname'))} >
+                                    <Box sx={{ display: 'flex', mb: 2 }} onClick={() => handleClick(scopedFormData['spname'])} >
                                         <IconButton><DriveFileRenameOutlineIcon color='primary' /></IconButton>
                                         <Typography variant='h6' >{scopedFormData.spname}</Typography>
                                     </Box>
 
                                     {
                                         (
-                                            (scopedFormData && getSource && getSource('spname') === selected) ||
-                                            (!scopedFormData.spname && getSource)
+                                            (scopedFormData && scopedFormData['spname'] === selected) ||
+                                            (!scopedFormData.spname)
                                         ) && (<>
                                             <TextInput
                                                 fullWidth
                                                 label="Service Provider Name"
-                                                source={getSource("spname")}
+                                                source="spname"
                                                 validate={[required()]}
-                                                onChange={() => setSelected(getSource('spname'))}
+                                                onChange={() => setSelected(scopedFormData['spname'])}
                                             />
                                             <TextInput
                                                 fullWidth
                                                 label="Service Provider SignIn Callback"
-                                                source={getSource("spcallback")}
+                                                source="spcallback"
                                                 validate={[required(), isHttpsOrHttpLocal]}
                                                 defaultValue={'http://localhost'}
                                             />
                                             <TextInput
                                                 fullWidth
                                                 label="Service Provider Logout Callback"
-                                                source={getSource("splogoutcallback")}
+                                                source="splogoutcallback"
                                                 validate={[isHttpsOrHttpLocal]}
                                             />
                                             <TextInput
                                                 fullWidth
                                                 label="Service Provider Login Url"
-                                                source={getSource("sploginurl")}
+                                                source="sploginurl"
                                                 validate={[required()]}
                                                 defaultValue={SPPortalUrl}
                                             />
                                             <TextInput
                                                 fullWidth
                                                 label="Service Provider Logo Url"
-                                                source={getSource("splogourl")}
+                                                source="splogourl"
                                             />
                                             <BooleanInput
                                                 fullWidth
                                                 label="Show to end users"
-                                                source={getSource("released")}
+                                                source="released"
                                             />
                                         </>)
                                     }
