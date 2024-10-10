@@ -28,5 +28,3 @@ cdk/lib/*.js
 cdk.out
 cdk/config/*.js
 cdk.context.json
-dist
-dist/*
