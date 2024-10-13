@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-import { AdminHostedUIURL, AdminPortalClientId, AdminPortalUserPoolId } from "./amfaext";
+import { AdminHostedUIURL, AdminPortalClientId, AdminPortalUserPoolId } from "/amfaext.js";
 
 const awsmobile = {
 	logo_img_url: `https://${process.env.ADMINPORTAL_DOMAIN_NAME}/Logo.png`,

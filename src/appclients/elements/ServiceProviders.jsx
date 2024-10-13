@@ -5,7 +5,7 @@ import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutli
 import { ArrayInput, BooleanInput, FormDataConsumer, SimpleFormIterator, TextInput, required } from 'react-admin';
 import { Box, IconButton } from '@mui/material';
 import { isHttpsOrHttpLocal } from '../../utils/validation';
-import { SPPortalUrl } from '../../amfaext';
+import { SPPortalUrl } from '/amfaext.js';
 
 export default function ServiceProviderForm(props) {
     const [selected, setSelected] = React.useState(null)

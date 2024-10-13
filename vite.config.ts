@@ -10,5 +10,10 @@ export default defineConfig({
     server: {
         host: true,
     },
+    build: {
+        rollupOptions: {
+            external: '/amfaext.js',
+        }
+    },
     base: './',
 });
