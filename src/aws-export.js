@@ -1,11 +1,11 @@
 /* eslint-disable */
 
-import { AdminHostedUIURL, AdminPortalClientId, AdminPortalUserPoolId } from "/amfaext.js";
+import { AdminHostedUIURL, AdminPortalClientId, AdminPortalUserPoolId, ProjectRegion, AdminPortalDomainName } from "/amfaext.js";
 
 const awsmobile = {
-	logo_img_url: `https://${process.env.ADMINPORTAL_DOMAIN_NAME}/Logo.png`,
-	aws_project_region: process.env.CDK_DEPLOY_REGION,
-	aws_backend_api_url: `https://api.${process.env.ADMINPORTAL_DOMAIN_NAME}`,
+	logo_img_url: `https://${AdminPortalDomainName}/Logo.png`,
+	aws_project_region: ProjectRegion,
+	aws_backend_api_url: `https://api.${AdminPortalDomainName}`,
 	aws_samlproxy_api_url: 'https://api.samlproxy.amfa.aws-amplify.dev/samlproxy',
 	aws_user_pools_id: AdminPortalUserPoolId,  // admin userpool id
 	aws_user_pools_web_client_id: AdminPortalClientId,

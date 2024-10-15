@@ -13,6 +13,9 @@ if [ -d "../"$AMFA_FOLD"_release" ]; then
 fi
 
 echo 'making release... wait'
+npm i
+npm run build
+rm -rf node_modules
 cd ..
 cp -r $AMFA_FOLD $AMFA_FOLD"_release" >/dev/null 2>&1
 cd $AMFA_FOLD"_release"
