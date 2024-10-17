@@ -4,6 +4,7 @@ import {
     SetUICustomizationCommand,
     DescribeUserPoolClientCommand,
     UpdateUserPoolClientCommand,
+    AdminCreateUserCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 
 
@@ -21,6 +22,27 @@ export const handler = async (event) => {
             ClientId: process.env.CLIENT_ID,
             ImageFile: Buffer.from(buf),//blob,
         }))
+
+        if (process.env.ADMIN_EMAIL && process.env.ADMIN_EMAIL.length > 0) {
+            const res = await cognito.send(new AdminCreateUserCommand({
+                UserPoolId: process.env.ADMINPOOL_ID,
+                Username: process.env.ADMIN_EMAIL, // required
+                UserAttributes: [ // AttributeListType
+                    { // AttributeType
+                        Name: "email", // required
+                        Value: process.env.ADMIN_EMAIL,
+                    },
+                    { // AttributeType
+                        Name: "email_verified",
+                        Value: "true",
+                    },
+                ],
+                DesiredDeliveryMediums: [ // DeliveryMediumListType
+                    "EMAIL",
+                ],
+            }));
+            console.log('create admin user res:', res);
+        }
 
         console.log('set ui customization res:', res);
     }

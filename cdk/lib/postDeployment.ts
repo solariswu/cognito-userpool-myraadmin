@@ -30,6 +30,7 @@ export const createPostDeploymentLambda = (
             SAML_CALLBACK_URL: samlproxy_base_url + samlClientId,
             ROOT_DOMAIN_NAME: stage_config[current_stage].domainName,
             TENANT_ID: process.env.TENANT_ID? process.env.TENANT_ID : 'unknown',
+            ADMIN_EMAIL: process.env.ADMIN_EMAIL? process.env.ADMIN_EMAIL : 'unknown',
         },
         timeout: Duration.minutes(5),
     });
@@ -46,6 +47,7 @@ export const createPostDeploymentLambda = (
                 new PolicyStatement({
                     actions: [
                         'cognito-idp:SetUICustomization',
+                        'cognito-idp:AdminCreateUser',
                     ],
                     resources: [`arn:aws:cognito-idp:${stage_config[current_stage].env.region}:*:userpool/${adminPoolId}`],
                 }),

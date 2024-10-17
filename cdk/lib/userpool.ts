@@ -90,6 +90,12 @@ export class SSOUserPool {
       },
       // forgotPassword recovery method, phone by default
       accountRecovery: AccountRecovery.EMAIL_ONLY,
+      // new admin user creation message
+      userInvitation: {
+        emailSubject: 'Admin User created',
+        emailBody: 'Hello {username}, your admin account for amfa login portal is created! Your temporary password is {####}',
+        smsMessage: 'Hello {username}, your amfa admin portal temporary password is {####}',
+      },
     });
   }
 

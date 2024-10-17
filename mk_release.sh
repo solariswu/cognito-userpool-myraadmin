@@ -19,7 +19,7 @@ rm -rf node_modules
 cd ..
 cp -r $AMFA_FOLD $AMFA_FOLD"_release" >/dev/null 2>&1
 cd $AMFA_FOLD"_release"
-rm -rf cdk.out .git node_modules src mk_release.sh config_bak.sh
+rm -rf cdk.out .git node_modules src public mk_release.sh config_bak.sh
 rm -rf cdk/lambda/serviceproviderslist/*.mjs
 rm -rf cdk/lambda/samlslist/*.mjs
 
