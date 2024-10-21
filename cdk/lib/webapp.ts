@@ -46,7 +46,7 @@ export class WebApplication {
 
 	private createS3Bucket(name: string) {
 		return new Bucket(this.scope, `${project_name}-${this.region}-${current_stage}-WebAppDeployBucket-${name}`, {
-			bucketName: `${this.account}-${this.region}-${project_name}-${current_stage}-${name}`,
+			bucketName: `${this.account}-${this.region}-${project_name}-${name}`,
 			accessControl: BucketAccessControl.PRIVATE,
 			removalPolicy: RemovalPolicy.DESTROY,
 		});
