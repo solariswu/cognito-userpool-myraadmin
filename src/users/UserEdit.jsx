@@ -105,7 +105,7 @@ export const UserEdit = () => {
             />
             <FunctionField
               render={(record) => (
-                !record.license &&
+                record.license === false &&
                 <h2><span style={{ color: "red" }}>User not licensed</span></h2>
               )}
             />
