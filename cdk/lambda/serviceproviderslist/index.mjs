@@ -12,58 +12,63 @@ const samlurl = process.env.SAMLPROXY_API_URL;
 const Limit = 60;
 
 const getSAMLSpInfo = async (dynamodb, cognitoToken) => {
-    const res = await fetch(samlurl, {
-        method: "GET",
-        cache: "no-cache",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": cognitoToken,
-        }
-    });
-    console.log('fetch samlurl res', res)
-
-    const resData = await res.json();
-    console.log('fetch samlurl resData', resData)
-
     let data = []
-    for (var item in resData) {
 
-        console.log('samlslist getting item with id from ddb', resData[item].id)
+    try {
+        const res = await fetch(samlurl, {
+            method: "GET",
+            cache: "no-cache",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": cognitoToken,
+            }
+        });
+        console.log('fetch samlurl res', res)
 
-        const params = {
-            TableName: process.env.AMFA_SPINFO_TABLE,
-            Key: {
-                id: { S: `#SAML#${resData[item].id}` },
-            },
-        };
+        const resData = await res.json();
+        console.log('fetch samlurl resData', resData)
 
-        let spInfo = null;
+        for (var item in resData) {
 
-        try {
-            const spInfoRes = await dynamodb.send(new GetItemCommand(params));
+            console.log('samlslist getting item with id from ddb', resData[item].id)
 
-            console.log('samlslist get spInfo from dynamodb Res', spInfoRes)
+            const params = {
+                TableName: process.env.AMFA_SPINFO_TABLE,
+                Key: {
+                    id: { S: `#SAML#${resData[item].id}` },
+                },
+            };
 
-            if (spInfoRes?.Item?.id) {
-                spInfo = {
-                    logoUrl: spInfoRes?.Item?.logoUrl?.S,
-                    serviceUrl: spInfoRes?.Item?.serviceUrl?.S,
-                    released: spInfoRes?.Item?.released?.BOOL ? true : false,
+            let spInfo = null;
+
+            try {
+                const spInfoRes = await dynamodb.send(new GetItemCommand(params));
+
+                console.log('samlslist get spInfo from dynamodb Res', spInfoRes)
+
+                if (spInfoRes?.Item?.id) {
+                    spInfo = {
+                        logoUrl: spInfoRes?.Item?.logoUrl?.S,
+                        serviceUrl: spInfoRes?.Item?.serviceUrl?.S,
+                        released: spInfoRes?.Item?.released?.BOOL ? true : false,
+                    }
                 }
             }
-        }
-        catch (e) {
-            console.log('samlslist get spInfo from dynamodb error', e)
-        }
+            catch (e) {
+                console.log('samlslist get spInfo from dynamodb error', e)
+            }
 
-        data.push({
-            id: resData[item].id,
-            name: resData[item].name,
-            entityId: resData[item].entityId,
-            logoUrl: spInfo?.logoUrl,
-            serviceUrl: spInfo?.serviceUrl,
-            released: spInfo?.released,
-        })
+            data.push({
+                id: resData[item].id,
+                name: resData[item].name,
+                entityId: resData[item].entityId,
+                logoUrl: spInfo?.logoUrl,
+                serviceUrl: spInfo?.serviceUrl,
+                released: spInfo?.released,
+            })
+        }
+    } catch (error) {
+        console.error ('samlslist fetch samlurl error', error)
     }
 
     return data;

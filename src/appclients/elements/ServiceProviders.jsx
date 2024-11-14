@@ -56,7 +56,7 @@ export default function ServiceProviderForm(props) {
                                             />
                                             <TextInput
                                                 fullWidth
-                                                label="Service Provider SignIn Callback"
+                                                label="Service Provider SignIn Callback/Redirect URL"
                                                 source="spcallback"
                                                 validate={[required(), isHttpsOrHttpLocal]}
                                                 defaultValue={'http://localhost'}

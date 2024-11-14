@@ -103,6 +103,12 @@ export const UserEdit = () => {
                 }`}</h1>
               )}
             />
+            <FunctionField
+              render={(record) => (
+                !record.license &&
+                <h2><span style={{ color: "red" }}>User not licensed</span></h2>
+              )}
+            />
             <Form
               mode="onBlur"
               reValidateMode="onBlur"

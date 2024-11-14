@@ -311,7 +311,7 @@ export class SSOApiGateway {
         let lambda = new Function(this.scope, lambdaName, {
             runtime: Runtime.NODEJS_20_X,
             handler: 'index.handler',
-            code: Code.fromAsset(path.join(__dirname, `/../lambda/${lambdaName}`)),
+            code: Code.fromAsset(path.join(__dirname, `/../lambda/${lambdaName}/dist`)),
             environment: {
                 USERPOOL_ID: userPoolId,
                 AMFA_SPINFO_TABLE: spinfoTable.tableName,

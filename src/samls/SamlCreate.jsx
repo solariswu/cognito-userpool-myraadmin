@@ -4,7 +4,7 @@ import { Typography } from '@mui/material';
 import { BooleanInput, Button, Confirm, Create, FileField, FileInput, RadioButtonGroupInput, SaveButton, SimpleForm, TextInput, Toolbar, useCreate, useRedirect } from 'react-admin';
 
 import { validateUrl } from '../utils/validation';
-import { useWatch } from "react-hook-form";
+// import { useWatch } from "react-hook-form";
 
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -40,23 +40,23 @@ export const SamlCreate = () => {
     });
     const redirect = useRedirect();
 
-    const MetadataInput = () => {
-        const metadataType = useWatch({ name: 'metadataType' });
-        if (metadataType === 'isUrl') {
-            return (
-                <>
-                    <TextInput label="SP Metadata URL" source="metadataUrl" fullWidth helperText={false} validate={validateUrl} />
-                    <div style={{ height: '2em' }} />
-                </>)
-        }
-        if (metadataType === 'isFile') {
-            return (
-                <FileInput source="metadataFile" label="Upload SP metadata file (.xml)" accept=".xml" >
-                    <FileField source="src" title="title" />
-                </FileInput>
-            )
-        }
-    }
+    // const MetadataInput = () => {
+    //     const metadataType = useWatch({ name: 'metadataType' });
+    //     if (metadataType === 'isUrl') {
+    //         return (
+    //             <>
+    //                 <TextInput label="SP Metadata URL" source="metadataUrl" fullWidth helperText={false} validate={validateUrl} />
+    //                 <div style={{ height: '2em' }} />
+    //             </>)
+    //     }
+    //     if (metadataType === 'isFile') {
+    //         return (
+    //             <FileInput source="metadataFile" label="Upload SP metadata file (.xml)" accept=".xml" >
+    //                 <FileField source="src" title="title" />
+    //             </FileInput>
+    //         )
+    //     }
+    // }
 
     const handleSamlSPCreate = async (data) => {
 
@@ -112,7 +112,9 @@ export const SamlCreate = () => {
                     { id: 'isUrl', name: 'Metadata URL' },
                     { id: 'isFile', name: 'Upload Metadata File' },
                 ]} />
-                <MetadataInput />
+                {/* <MetadataInput /> */}
+                <TextInput label="SP Metadata URL" source="metadataUrl" fullWidth helperText={false} validate={validateUrl} />
+                <div style={{ height: '2em' }} />
                 <TextInput source="serviceUrl" required validate={validateUrl} fullWidth helperText={false} />
                 <div style={{ height: '2em' }} />
                 <TextInput source="logoUrl" validate={validateUrl} fullWidth helperText={false} />

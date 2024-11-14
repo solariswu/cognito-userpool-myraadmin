@@ -15,7 +15,9 @@ import { AppStackProps } from './application';
 import {
   hostedUI_domain_prefix,
   app_userpool_info, enduser_portal_callbackurls,
-  enduser_portal_logouturls
+  enduser_portal_logouturls,
+  stage_config,
+  current_stage
 } from '../config';
 
 
@@ -93,7 +95,7 @@ export class SSOUserPool {
       // new admin user creation message
       userInvitation: {
         emailSubject: 'Admin User created',
-        emailBody: 'Hello {username}, your admin account for amfa login portal is created! Your temporary password is {####}',
+        emailBody: `Hello {username}, your admin account for amfa login portal is created! Your temporary password is {####} and the URL is https://${stage_config[current_stage].domainName}`,
         smsMessage: 'Hello {username}, your amfa admin portal temporary password is {####}',
       },
     });
