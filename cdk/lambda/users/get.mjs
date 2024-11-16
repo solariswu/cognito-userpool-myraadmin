@@ -12,7 +12,7 @@ export const getResData = async (username, cognitoISP) => {
 	}
 
 	const checkLicense = (email) => new Promise((resolve, reject) => {
-		const options = { ...defaultOptions, path:'/amfa', method: 'POST' };
+		const options = { ...defaultOptions, path: '/amfa', method: 'POST' };
 		const req = https.request(options, res => {
 			let buffer = "";
 			res.on('data', chunk => buffer += chunk)
@@ -20,7 +20,7 @@ export const getResData = async (username, cognitoISP) => {
 			console.log('statusCode:', res.statusCode);
 		});
 		req.on('error', e => reject(e.message));
-		req.write(JSON.stringify({email, phase: "adminchecklicense"}));
+		req.write(JSON.stringify({ email, phase: "adminchecklicense" }));
 		req.end();
 	})
 
@@ -60,7 +60,13 @@ export const getResData = async (username, cognitoISP) => {
 	if (licenseRes.status !== 'rejected') {
 		const data = await licenseRes.value;
 		console.log('license data', data);
-		license = data === 200 ? true : false;
+		/* 
+			{"code":200,"message":"Active","info":"License is valid","identifier":null,"isUserUnderThreat":null,"platform":null}
+			{"code":203,"message":"Exceeds Allowed Users","info":"Exceed number of users allowed for validation","identifier":null,"isUserUnderThreat":null,"platform":null}
+			{"code":404,"message":"User not found.","info":"User not yet registered.","identifier":null,"isUserUnderThreat":null,"platform":null}
+			Only show the warning messages if the return code is: 203.
+		*/
+		license = data === 203 ? false : true;
 	}
 
 	const email_verified = item.UserAttributes.find(attr => attr.Name === "email_verified")?.Value;
