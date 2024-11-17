@@ -101,7 +101,7 @@ export const UserImportList = (props) => {
         <ListContextProvider
           value={checked ? filteredListContext : listContext}
         >
-          <Datagrid bulkActionButtons={false} size="medium" optimized>
+          <Datagrid bulkActionButtons={false} resource="users" size="medium" optimized>
             <FunctionField
               label="Email"
               render={(record) =>

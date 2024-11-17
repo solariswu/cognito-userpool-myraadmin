@@ -162,6 +162,7 @@ export const UserEdit = () => {
                 <Grid item xs={12} sm={5} md={5} lg={5}>
                   <TextInput
                     variant="outlined"
+                    label="SMS Phone Number"
                     fullWidth
                     source="phone_number"
                     validate={validatePhoneNumber}
@@ -240,14 +241,14 @@ export const UserEdit = () => {
                   />
                 </Grid>
                 <Grid item xs={12} sm={5} md={5} lg={5}>
+                  <TextInput variant="outlined" fullWidth source="name" />
+                </Grid>
+                <Grid item xs={12} sm={5} md={5} lg={5}>
                   <TextInput
                     variant="outlined"
                     fullWidth
                     source="middle_name"
                   />
-                </Grid>
-                <Grid item xs={12} sm={5} md={5} lg={5}>
-                  <TextInput variant="outlined" fullWidth source="name" />
                 </Grid>
                 <Grid item xs={0} sm={1} md={1} lg={1} />
                 <Grid item xs={12} sm={5} md={5} lg={5}>

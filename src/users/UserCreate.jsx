@@ -70,6 +70,7 @@ export const UserCreate = () => {
                         <Grid item xs={0} sm={1} md={1} lg={0} />
                         <Grid item xs={12} sm={5} md={5} lg={4}>
                             <TextInput
+                                label="SMS Phone Number"
                                 fullWidth
                                 source="phone_number"
                                 validate={validatePhoneNumber}

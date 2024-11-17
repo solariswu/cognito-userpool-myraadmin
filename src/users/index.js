@@ -1,12 +1,10 @@
 import { UserList } from "./UserList";
-// import { UserShow } from "./UserShow";
 import { UserEdit } from "./UserEdit";
 import { UserCreate } from "./UserCreate";
 import UserIcon from '@mui/icons-material/People';
 
 const users ={
   list: UserList,
-  // show: UserShow,
   edit: UserEdit,
   create: UserCreate,
   hasCreate: true,
