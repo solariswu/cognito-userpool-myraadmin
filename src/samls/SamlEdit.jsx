@@ -7,8 +7,21 @@ import { validateUrl } from '../utils/validation';
 
 export const SamlEdit = () => {
 
+    const EditActions = () => (
+        <TopToolbar>
+          <DeleteButton
+            confirmTitle="Are you sure you want to delete this sp?"
+            confirmContent=""
+          />
+          <ListButton />
+        </TopToolbar>
+      );
+
     return (
-        <Edit mutationMode="pessimistic" >
+        <Edit mutationMode="pessimistic"
+            redirect="show"
+            actions={<EditActions />}
+        >
             <Container sx={{ padding: '15px' }}>
                 <Box
                     sx={{

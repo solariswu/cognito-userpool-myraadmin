@@ -1,11 +1,11 @@
 import { SamlCreate } from "./SamlCreate";
-import { SamlShow } from "./SamlShow";
+// import { SamlShow } from "./SamlShow";
 import { SamlEdit } from "./SamlEdit";
 
 import CableIcon from '@mui/icons-material/Cable';
 
 const samls ={
-  show: SamlShow,
+  show: SamlEdit,
   edit: SamlEdit,
   create: SamlCreate,
   hasCreate: true,

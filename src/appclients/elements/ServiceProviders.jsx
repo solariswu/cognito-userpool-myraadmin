@@ -25,6 +25,7 @@ export default function ServiceProviderForm(props) {
             <ArrayInput fullWidth
                 source="serviceProviders"
                 required>
+                <Typography  variant="body">Provide a name, take defaults. Edit details after creation.</Typography>
                 <SimpleFormIterator fullWidth disableClear disableReordering >
                     <FormDataConsumer>
                         {({
