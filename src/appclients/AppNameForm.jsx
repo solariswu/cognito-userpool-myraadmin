@@ -17,7 +17,7 @@ export default function AppNameForm() {
         <Grid item xs={12} sm={12} md={6} lg={6}>
           <TextInput
             fullWidth
-            label="Service Provider Name / Category Name"
+            label="Service Name/Label"
             source="clientName"
             validate={[required()]}
           />
