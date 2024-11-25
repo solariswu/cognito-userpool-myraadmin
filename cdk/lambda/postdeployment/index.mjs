@@ -4,11 +4,47 @@ import {
     SetUICustomizationCommand,
     DescribeUserPoolClientCommand,
     UpdateUserPoolClientCommand,
+    DescribeUserPoolCommand,
+    UpdateUserPoolCommand,
     AdminCreateUserCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 
 
 const cognito = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION });
+
+const switchUserpoolTierToLite = async (UserPoolId) => {
+
+    const describeUserPoolRes = await cognito.send(new DescribeUserPoolCommand({
+        UserPoolId
+    }));
+
+    console.log('describeUserPoolRes:', describeUserPoolRes);
+
+    const userPool = describeUserPoolRes.UserPool;
+
+    if (!userPool) {
+        throw new Error('UserPool not found');
+    }
+
+    if (userPool.UserPoolTier === 'LITE') {
+        console.log('admin userpool tier is LITE already')
+        return;
+    }
+
+    userPool.UserPoolTier = 'LITE';
+    delete userPool.CreationDate;
+    delete userPool.LastModifiedDate;
+    delete userPool.EstimatedNumberOfUsers;
+    delete userPool.Id;
+    delete userPool.Status;
+
+    const param = {
+        UserPoolId,
+        ...userPool,
+    }
+
+    return cognito.send(new UpdateUserPoolCommand(param));
+}
 
 export const handler = async (event) => {
 
@@ -23,7 +59,16 @@ export const handler = async (event) => {
             ImageFile: Buffer.from(buf),//blob,
         }))
 
-        if (process.env.ADMIN_EMAIL && process.env.ADMIN_EMAIL.length > 0) {
+        console.log('set ui customization res:', res);
+    }
+    catch (error) {
+        console.error('set ui customization failed with:', error);
+        console.error('RequestId: ' + error.requestId);
+    }
+
+    if (process.env.ADMIN_EMAIL && process.env.ADMIN_EMAIL.length > 0) {
+        try {
+
             const res = await cognito.send(new AdminCreateUserCommand({
                 UserPoolId: process.env.ADMINPOOL_ID,
                 Username: process.env.ADMIN_EMAIL, // required
@@ -43,12 +88,10 @@ export const handler = async (event) => {
             }));
             console.log('create admin user res:', res);
         }
-
-        console.log('set ui customization res:', res);
-    }
-    catch (error) {
-        console.error('set ui customization failed with:', error);
-        console.error('RequestId: ' + error.requestId);
+        catch (error) {
+            console.error('set ui customization failed with:', error);
+            console.error('RequestId: ' + error.requestId);
+        }
     }
 
     try {
@@ -69,6 +112,13 @@ export const handler = async (event) => {
     }
     catch (error) {
         console.error('describe user pool client failed with:', error);
+        console.error('RequestId: ' + error.requestId);
+    }
+
+    try {
+        await switchUserpoolTierToLite(process.env.ADMINPOOL_ID);
+    } catch (error) {
+        console.error('switch userpool tier failed with:', error);
         console.error('RequestId: ' + error.requestId);
     }
 };
