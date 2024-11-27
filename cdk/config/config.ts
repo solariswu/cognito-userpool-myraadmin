@@ -47,8 +47,8 @@ export const enduser_portal_logouturls = [`${process.env.SP_PORTAL_URL}`];
 // SAML proxy now is one single instance with static domain assigned
 // manually deployed
 // might change later
-export const samlproxy_base_url = 'https://amfasaml.aws-amplify.dev/';
-export const api_samlproxy_base_url = 'https://api.samlproxy.amfa.aws-amplify.dev/'
+export const samlproxy_base_url = 'https://samlproxy.apersona.com/samlproxy';
+export const api_samlproxy_base_url = 'https://api.samlproxy.apersona.com/'
 export const samlproxy_api_url = `${api_samlproxy_base_url}samlproxy`;
 export const samlproxy_reload_url = `${api_samlproxy_base_url}reloadsamlproxy`;
 export const samlproxy_metadata_url = `${samlproxy_base_url}/Saml2IDP/proxy.xml`;
