@@ -82,6 +82,12 @@ export const handler = async (event) => {
             const start = (page - 1) * perPage;
             const end = resData.length + start - 1;
 
+            resData.sort((a, b) => {
+				if (a.id < b.id) return -1;
+				if (a.id > b.id) return 1;
+				return 0;
+			});
+
             return {
                 statusCode: 200,
                 headers: {

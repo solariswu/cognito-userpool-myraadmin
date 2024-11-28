@@ -47,6 +47,13 @@ export const handler = async (event) => {
 		});
 		// getList of React-admin expects response to have header called 'Content-Range'.
 		// when we add new header in response, we have to acknowledge it, so 'Access-Control-Expose-Headers'
+
+		resData.sort((a, b) => {
+			if (a.id < b.id) return -1;
+			if (a.id > b.id) return 1;
+			return 0;
+		});
+
 		return {
 			statusCode: 200,
 			headers: {

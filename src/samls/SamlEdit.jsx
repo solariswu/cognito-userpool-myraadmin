@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { Box, Container, Typography } from '@mui/material';
-import { BooleanInput, Edit, FunctionField, SimpleForm, TextInput } from 'react-admin';
+import { BooleanInput, Edit, FunctionField, SimpleForm, DeleteButton, ListButton, TextInput, TopToolbar } from 'react-admin';
 
 import { validateUrl } from '../utils/validation';
 
