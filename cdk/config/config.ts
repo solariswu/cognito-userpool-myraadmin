@@ -51,4 +51,4 @@ export const samlproxy_base_url = 'https://samlproxy.apersona.com/';
 export const api_samlproxy_base_url = 'https://api.samlproxy.apersona.com/'
 export const samlproxy_api_url = `${api_samlproxy_base_url}samlproxy`;
 export const samlproxy_reload_url = `${api_samlproxy_base_url}reloadsamlproxy`;
-export const samlproxy_metadata_url = `${samlproxy_base_url}/Saml2IDP/proxy.xml`;
+export const samlproxy_metadata_url = `${samlproxy_base_url}Saml2IDP/proxy.xml`;
