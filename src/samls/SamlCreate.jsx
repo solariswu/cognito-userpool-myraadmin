@@ -115,9 +115,9 @@ export const SamlCreate = () => {
                 {/* <MetadataInput /> */}
                 <TextInput label="SP Metadata URL" source="metadataUrl" fullWidth helperText={false} validate={validateUrl} />
                 <div style={{ height: '2em' }} />
-                <TextInput source="serviceUrl" required validate={validateUrl} fullWidth helperText={false} />
+                <TextInput source="serviceUrl" label="Service URL/Assertion Consumer Service(ACS) URL" required validate={validateUrl} fullWidth helperText={false} />
                 <div style={{ height: '2em' }} />
-                <TextInput source="logoUrl" validate={validateUrl} fullWidth helperText={false} />
+                <TextInput source="logoUrl" label="Logo URL (Image Size: 25x25)" validate={validateUrl} fullWidth helperText={false} />
                 <BooleanInput source='released' label="Show to end user" />
             </SimpleForm >
         </Create >

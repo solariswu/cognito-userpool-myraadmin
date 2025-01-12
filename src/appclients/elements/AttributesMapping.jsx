@@ -15,6 +15,7 @@ export default function AttributesMapping() {
 					<Typography variant="body2"> Given Name</Typography>
 					<Typography variant="body2"> Surname</Typography>
 					<Typography variant="body2"> Email</Typography>
+					<Typography variant="body2"> Sub</Typography>
 				</Grid>
 				<Grid item xs={12} sm={6} md={6} lg={5}>
 					<Typography variant="body2" color="text.secondary"> email </Typography>
@@ -22,6 +23,7 @@ export default function AttributesMapping() {
 					<Typography variant="body2" color="text.secondary"> given_name </Typography>
 					<Typography variant="body2" color="text.secondary"> family_name </Typography>
 					<Typography variant="body2" color="text.secondary"> email </Typography>
+					<Typography variant="body2" color="text.secondary"> sub </Typography>
 				</Grid>
 			</Grid>
 			<Typography sx={{ marginTop: '20px' }}>

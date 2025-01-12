@@ -156,7 +156,7 @@ export const AppClientEdit = () => {
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={6} lg={5} />
                 <Grid item xs={12} sm={6} md={6} lg={6}>
-                  <TextInput fullWidth source='serviceLogoUrl' validate={validateUrl} sx={{ minWidth: '800px' }} />
+                  <TextInput fullWidth source='serviceLogoUrl' label="Logo url (Image Size: 25x25)" validate={validateUrl} sx={{ minWidth: '800px' }} />
                 </Grid>
               </Grid>
             </Box>
