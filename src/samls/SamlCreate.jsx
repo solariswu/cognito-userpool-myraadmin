@@ -108,10 +108,10 @@ export const SamlCreate = () => {
             }
             <SimpleForm onSubmit={handleSamlSPCreate} toolbar={<SamlCreateToolbar />}>
                 <TextInput label="SAML SP Name" source="name" required fullWidth helperText={false} />
-                <RadioButtonGroupInput required label="Metadata document source" source="metadataType" choices={[
+                {/* <RadioButtonGroupInput required label="Metadata document source" source="metadataType" choices={[
                     { id: 'isUrl', name: 'Metadata URL' },
                     { id: 'isFile', name: 'Upload Metadata File' },
-                ]} />
+                ]} /> */}
                 {/* <MetadataInput /> */}
                 <TextInput label="SP Metadata URL" source="metadataUrl" fullWidth helperText={false} validate={validateUrl} />
                 <div style={{ height: '2em' }} />
