@@ -113,7 +113,8 @@ export const SamlCreate = () => {
                     { id: 'isFile', name: 'Upload Metadata File' },
                 ]} /> */}
                 {/* <MetadataInput /> */}
-                <TextInput label="SP Metadata URL" source="metadataUrl" fullWidth helperText={false} validate={validateUrl} />
+                <div style={{ height: '2em' }} />
+                <TextInput label="SP Metadata URL" source="metadataUrl" required fullWidth helperText={false} validate={validateUrl} />
                 <div style={{ height: '2em' }} />
                 <TextInput source="serviceUrl" label="Service URL/Assertion Consumer Service(ACS) URL" required validate={validateUrl} fullWidth helperText={false} />
                 <div style={{ height: '2em' }} />

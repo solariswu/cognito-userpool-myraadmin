@@ -22,7 +22,7 @@ export default function AppNameForm() {
             validate={[required()]}
           />
         </Grid>
-        <TextInput fullWidth source='serviceLogoUrl' validate={validateUrl} />
+        <TextInput fullWidth source='serviceLogoUrl' label='Service logo url (Image Size: 25x25)' validate={validateUrl} />
         <Grid item xs={12}>
           <BooleanInput label="Generate a client secret *" color="secondary" source="hasClientSecret" value="yes" />
 
