@@ -5,6 +5,20 @@ import {
 const samlurl = process.env.SAMLPROXY_API_URL;
 const samlReloadUrl = process.env.SAMLPROXY_RELOAD_URL;
 
+const postURL = `https://api.${process.env.AMFA_BASE_URL}/amfa`;
+
+const updateSmtp = async (id, smtp) => fetch(postURL, {
+	method: "POST",
+	headers: {
+		'Content-Type': 'application/json',
+		'Accept': 'application/json',
+		'Origin': `https://${process.env.AMFA_BASE_URL}`,
+	},
+	body: JSON.stringify({
+		phase: 'adminupdatesmtp', tenantid: id, smtp
+	}),
+});
+
 const taggleSaml = async (cognitoToken, enable) => {
 
 	const response = await fetch(samlurl, {
@@ -65,6 +79,19 @@ export const putResData = async (payload, previousData, cognitoToken, dynamodb) 
 
 		if (payload.samlproxy !== previousData.samlproxy) {
 			await taggleSaml (cognitoToken, payload.samlproxy)
+		}
+
+		const smtp = previousData.smtp || { from: '', host: '', port: 587, user: '', pass: '' };
+		const smtpChanged = smtp.host !== payload.host || smtp.port !== payload.port || smtp.user !== payload.user || smtp.pass !== payload.pass || smtp.secure !== payload.secure;
+		if (smtpChanged) {
+			const smtp = {
+				host: payload.host,
+				port: payload.port,
+				user: payload.user,
+				pass: payload.pass,
+				secure: payload.secure,
+			};
+			await updateSmtp(payload.id, smtp);
 		}
 
 		return {

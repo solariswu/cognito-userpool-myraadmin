@@ -50,6 +50,7 @@ export const getResData = async (id, cognitoToken, dynamodb) => {
 			samlproxy: item.samlproxy?.BOOL,
 			samlIdPMetadataUrl: process.env.SAMLPROXY_METADATA_URL,
 			...message,
+			
 			// branding: item.branding,
 		};
 	}

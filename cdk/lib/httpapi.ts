@@ -80,7 +80,7 @@ export class SSOApiGateway {
                 S3_BASE_URL: `${stage_config[current_stage].domainName}`,
                 BUCKET: s3bucket.bucketName,
                 SERVICE_NAME: service_name,
-                TENANT_ID: tenant_id ? tenant_id : 'unknown',
+                TENANT_ID: tenant_id ? tenant_id : 'unknowntid',
             }
         });
 
@@ -103,7 +103,7 @@ export class SSOApiGateway {
                 S3_BASE_URL: `${stage_config[current_stage].domainName}`,
                 BUCKET: s3bucket.bucketName,
                 SERVICE_NAME: service_name,
-                TENANT_ID: tenant_id ? tenant_id : 'unknown',
+                TENANT_ID: tenant_id ? tenant_id : 'unknowntid',
             }
         });
 
@@ -215,8 +215,8 @@ export class SSOApiGateway {
             });
         });
 
-        const samlsListLambda = this.createAmfaSamlSpsLambda('samlslist', 
-        samlClientId, samlClientSecrect, userPoolId, this.spinfoTable);
+        const samlsListLambda = this.createAmfaSamlSpsLambda('samlslist',
+            samlClientId, samlClientSecrect, userPoolId, this.spinfoTable);
         // 👇 add route for GET /resource
         this.api.addRoutes({
             path: '/samls',
@@ -228,7 +228,7 @@ export class SSOApiGateway {
             authorizer: this.authorizor,
         });
         const samlsLambda = this.createAmfaSamlSpsLambda('samls',
-        samlClientId, samlClientSecrect, userPoolId, this.spinfoTable);
+            samlClientId, samlClientSecrect, userPoolId, this.spinfoTable);
         // 👇 add route for CRUD /resource/id
         this.api.addRoutes({
             path: '/samls/{id}',
@@ -278,6 +278,18 @@ export class SSOApiGateway {
             authorizer: this.authorizor,
         });
 
+        // amfa smtp config api
+        const smtplambda = this.createSmtpConfigLambda ();
+
+        this.api.addRoutes({
+            path: '/smtpconfig',
+            methods: [HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST],
+            integration: new HttpLambdaIntegration(
+                'smtpconfig-integration',
+                smtplambda,
+            ),
+            authorizer: this.authorizor,
+        })
     }
 
     public createEndUserPortalApiEndpoints(userPoolId: string) {
@@ -467,6 +479,7 @@ export class SSOApiGateway {
                 SAMLPROXY_RELOAD_URL: samlproxy_reload_url,
                 SAML_CLIENTID: samlClientId,
                 SAMLPROXY_METADATA_URL: samlproxy_metadata_url,
+                TENANT_ID: tenant_id ? tenant_id : 'unknowntid',
             },
             timeout: Duration.minutes(5)
         });
@@ -484,7 +497,14 @@ export class SSOApiGateway {
                             'dynamodb:Scan',
                             'dynamodb:DeleteItem',
                         ],
-                    })
+                    }),
+                    new PolicyStatement({
+                        resources: ['*'],
+                        actions: [
+                            'secretsmanager:GetSecretValue',
+                            'secretsmanager:UpdateSecretValue'
+                        ],
+                    }),
                 ],
             })
         );
@@ -512,7 +532,7 @@ export class SSOApiGateway {
             code: Code.fromAsset(path.join(__dirname, `/../lambda/${lambdaName}/dist`)),
             environment: {
                 AMFACONFIG_TABLE: tableName,
-                TENANT_ID: tenant_id ? tenant_id : 'unknown',
+                TENANT_ID: tenant_id ? tenant_id : 'unknowntid',
                 AMFATENANT_TABLE,
                 USERPOOL_ID: userpoolId,
             },
@@ -681,4 +701,36 @@ export class SSOApiGateway {
 
         return lambda;
     };
+
+    private createSmtpConfigLambda() {
+
+        const lambdaName = 'smtpconfig';
+
+        let lambda = new Function(this.scope, lambdaName, {
+            runtime: Runtime.NODEJS_20_X,
+            handler: 'index.handler',
+            code: Code.fromAsset(path.join(__dirname, `/../lambda/${lambdaName}/dist`)),
+            environment: {
+                TENANT_ID: tenant_id ? tenant_id : 'unknowntid',
+            },
+            timeout: Duration.minutes(5)
+        });
+
+        lambda.role?.attachInlinePolicy(
+            new Policy(this.scope, `${lambdaName}-policy`, {
+                statements: [
+                    new PolicyStatement({
+                        resources: ['*'],
+                        actions: [
+                            'secretsmanager:GetSecretValue',
+                            'secretsmanager:UpdateSecretValue'
+                        ],
+                    }),
+                ],
+            })
+        );
+
+        return lambda;
+    }
+
 }

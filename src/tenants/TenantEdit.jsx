@@ -1,5 +1,4 @@
-import * as React from "react";
-
+import { useState } from "react";
 import {
   Container,
   Divider,
@@ -7,10 +6,12 @@ import {
   Box,
   Card,
   CardContent,
+  Button,
   IconButton,
   FormControlLabel,
   Switch,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 import {
   Edit,
@@ -25,19 +26,79 @@ import {
   SaveButton,
   ListButton,
   BooleanInput,
+  NumberInput
 } from "react-admin";
 
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import awsmobile from "../aws-export";
+
+const apiUrl = awsmobile.aws_backend_api_url;
 
 export const TenantEdit = () => {
   const notify = useNotify();
-  const [showSecret, setShowSecret] = React.useState(false);
-  const [showTotpSecret, setShowTotpSecret] = React.useState(false);
+  const [showSecret, setShowSecret] = useState(false);
+  const [showTotpSecret, setShowTotpSecret] = useState(false);
+  const [inSending, setInSending] = useState(false);
+  // const [configData, setConfigData] = useState(null);
+
+  // useEffect(() => {
+  //   const fetchSmtp = async () => {
+  //     let response = await fetch(`${apiUrl}/smtpconfig`, {
+  //       headers: {
+  //         Authorization: localStorage.getItem("token"),
+  //         "Content-Type": "application/json",
+  //         Accept: "application/json",
+  //       },
+  //     });
+  //     let data = await response.json();
+  //     console.log('smtpconfig data', data)
+  //     setConfigData(data);
+  //   };
+
+  //   fetchSmtp();
+  // }, []);
 
   const handleClick = (text) => {
     notify(`Copied to clipboard`, { type: "success" });
     navigator.clipboard.writeText(text);
   };
+
+  const handleSMTPTest = async () => {
+    let smtp = {};
+    smtp.user = document.getElementById('user').value;
+    smtp.pass = document.getElementById('pass').value;
+    smtp.host = document.getElementById('host').value;
+    smtp.secure = document.getElementById('secure').checked;
+    smtp.port = document.getElementById('port').value;
+    smtp.toUser = document.getElementById('toUser').value;
+
+    setInSending(true);
+
+    const res = await fetch(`${apiUrl}/smtpconfig`, {
+      method: "POST",
+      body: JSON.stringify({ data: smtp }),
+      headers: {
+        Authorization: localStorage.getItem("token"),
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+    setInSending(false)
+    const json = await res.json();
+    (res.status !== 200 || json.type === "exception" || json.type === "Error") ?
+      notify(`SMTP TEST email sent Error: ${json.data}`, { type: "error" }) :
+    notify(`SMTP Email sent successfully`, { type: "success" });
+  }
+
+  const TestSMTPButton = () => inSending ?
+    <CircularProgress /> :
+    <Button
+      label="Test"
+      onClick={handleSMTPTest}
+      variant="contained"
+      color="primary"
+      startIcon={null}
+    >Test SMTP</Button>
 
   const DispCardItem = ({ title, source, showCopy }) => {
     const Content = ({ source }) => {
@@ -185,7 +246,7 @@ export const TenantEdit = () => {
   );
 
   return (
-    <Edit mutationMode="pessimistic" redirect="list" actions={<EditActions />}>
+    <Edit mutationMode="pessimistic" redirect="list" actions={<EditActions />} emptyWhileLoading>
       <Form mode="onBlur" reValidateMode="onBlur">
         <Container sx={{ padding: "15px" }}>
           <Box
@@ -236,9 +297,9 @@ export const TenantEdit = () => {
                 )}
               />
               <Box sx={{ marginTop: "40px" }} />
-              <Card>
-                <CardContent>
-                  <BooleanInput label="Enable SAML" source="samlproxy" />
+              {/* <Card>
+                <CardContent> */}
+                  {/* <BooleanInput label="Enable SAML" source="samlproxy" /> */}
                   <FunctionField
                     render={(record) => (
                       <DispCardItem
@@ -248,10 +309,44 @@ export const TenantEdit = () => {
                       />
                     )}
                   />
-                </CardContent>
-              </Card>
+                {/* </CardContent>
+              </Card> */}
             </Grid>
             <Grid item xs={12} sm={6} md={6} lg={5}>
+              <Card sx={{ minWidth: "800px"}}>
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="div">
+                    SMTP server
+                  </Typography>
+                  <Grid container sx={{ marginTop: '20px' }}>
+                    <Grid item xs={12} sm={5} md={5} lg={4}>
+                      <TextInput source="host" id="host" />
+                    </Grid>
+				            <Grid item xs={12} sm={5} md={5} lg={4}>
+                      <NumberInput source="port" id="port"/>
+                    </Grid>
+				            <Grid item xs={12} sm={5} md={5} lg={4}>
+                      <BooleanInput source="secure" id="secure" />
+                    </Grid>
+				            <Grid item xs={12} sm={5} md={5} lg={4}>
+                      <TextInput source="user" id="user" />
+                    </Grid>
+				            <Grid item xs={12} sm={5} md={5} lg={4}>
+                      <TextInput source="pass" id="pass" />
+                    </Grid>
+                  </Grid>
+                  <Divider />
+                  <Box sx={{ marginTop: "10px"}} />
+                  <Grid container>
+                    <Grid item xs={12} sm={5} md={5} lg={4}>
+                    <TextInput source="toUser" type="email" label="test email address" id="toUser" disabled={inSending} />
+                    </Grid>
+                    <Grid item xs={12} sm={5} md={5} lg={4}>
+                    <TestSMTPButton />
+                    </Grid>
+                    </Grid>
+                </CardContent>
+              </Card>
               {/* <Card sx={{ minWidth: "800px" }}>
                 <CardContent>
                   <FunctionField
@@ -275,8 +370,8 @@ export const TenantEdit = () => {
                   />
                   <Divider />
                 </CardContent>
-              </Card>
-              <Box sx={{ marginTop: "20px" }} /> */}
+              </Card>*/}
+              <Box sx={{ marginTop: "20px" }} />
               <Card sx={{ minWidth: "800px" }}>
                 <Card>
                   <CardContent>
@@ -329,8 +424,8 @@ export const TenantEdit = () => {
                                 handleClick(
                                   record.url.replace(
                                     "https://",
-                                    "https://api."
-                                  ) + "/totptoken"
+                                    "https://api.",
+                                  ) + "/totptoken",
                                 )
                               }
                               size="small"
