@@ -26,7 +26,8 @@ import {
   SaveButton,
   ListButton,
   BooleanInput,
-  NumberInput
+  NumberInput,
+  PasswordInput
 } from "react-admin";
 
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -38,6 +39,7 @@ export const TenantEdit = () => {
   const notify = useNotify();
   const [showSecret, setShowSecret] = useState(false);
   const [showTotpSecret, setShowTotpSecret] = useState(false);
+  // const [showSMTPSecret, setShowSMTPSecret] = useState(false);
   const [inSending, setInSending] = useState(false);
   // const [configData, setConfigData] = useState(null);
 
@@ -332,7 +334,7 @@ export const TenantEdit = () => {
                       <TextInput source="user" id="user" />
                     </Grid>
 				            <Grid item xs={12} sm={5} md={5} lg={4}>
-                      <TextInput source="pass" id="pass" />
+                      <PasswordInput source="pass" id="pass" />
                     </Grid>
                   </Grid>
                   <Divider />

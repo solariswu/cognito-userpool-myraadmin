@@ -69,6 +69,7 @@ export class AppStack extends Stack {
     new CfnOutput(this, 'Admin Portal KickOff URL', { value: `https://${props.domainName}` });
 
     new CfnOutput(this, 'SAML Proxy App Client ID', { value: userPool.samlClient.userPoolClientId })
+    new CfnOutput(this, 'SAML Proxy App Client Secret', { value: userPool.samlClient.userPoolClientSecret.unsafeUnwrap() })
 
   }
 }

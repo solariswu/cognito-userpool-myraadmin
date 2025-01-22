@@ -42,9 +42,9 @@ export const handler = async (event) => {
             const info = await transporter.sendMail({
                 from: secret.user, // sender address
                 to: secret.toUser, // list of receivers
-                subject: "Admin Test SMTP", // Subject line
-                text: "Hello world?", // plain text body
-                html: "<b>Hello world?</b>", // html body
+                subject: "aPersona Identity Tenant SMTP Email Settings Test", // Subject line
+                text: "This is a test email generated to confirm your aPersona Identity SMTP email service settings. \nIf you have received this email, your settings are working correctly.", // plain text body
+                html: "<p>This is a test email generated to confirm your aPersona Identity SMTP email service settings.</p><p>If you have received this email, your settings are working correctly.</p>", // html body
             });
 
             console.log("Message sent: %s", info.messageId);
