@@ -37,7 +37,7 @@ export const getResData = async (id, cognitoToken, dynamodb) => {
 	const resJson = await res.json();
 
 	console.log('get secret json from amfa', resJson);
-	const message = resJson.message;
+	const smtp = resJson.message;
 
 
 	if (item && item.name) {
@@ -47,10 +47,10 @@ export const getResData = async (id, cognitoToken, dynamodb) => {
 			name: item.name.S,
 			contact: item.contact.S,
 			url: item.url.S,
+			endUserSpUrl: item.enduserspurl.S,
 			samlproxy: item.samlproxy?.BOOL,
 			samlIdPMetadataUrl: process.env.SAMLPROXY_METADATA_URL,
-			...message,
-			
+			...smtp,
 			// branding: item.branding,
 		};
 	}

@@ -54,6 +54,7 @@ export const handler = async (event) => {
                         name: item.name.S,
                         contact: item.contact.S,
                         url: item.url.S,
+                        endUserSpUrl: item.enduserspurl.S,
                         samlproxy: item.samlproxy?.BOOL,
                     }
                 });

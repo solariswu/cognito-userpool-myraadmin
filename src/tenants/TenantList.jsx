@@ -44,7 +44,7 @@ export const TenantList = props => {
 					<TextField label="Tenant Name" source="name" sortable={true} />
 					<TextField label="Tenant Id" source="id" sortable={true} />
 					<TextField label="Contact Email" source="contact" sortable={false} />
-					<TextField label="AWS URL" source="url" sortable={false} />
+					<TextField label="End User Service Provider URL" source="endUserSpUrl" sortable={false} />
 					<Button label="Edit" color="primary" icon="Edit" />
 				</Datagrid>
 			</List>

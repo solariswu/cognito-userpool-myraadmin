@@ -65,6 +65,9 @@ export const putResData = async (payload, previousData, cognitoToken, dynamodb) 
 			url: {
 				S: payload.url,
 			},
+			endUserSpUrl: {
+				S: payload.enduserspurl,
+			},
 			samlproxy: {
 				BOOL: payload.samlproxy
 			}
@@ -100,6 +103,8 @@ export const putResData = async (payload, previousData, cognitoToken, dynamodb) 
 			contact: item.contact,
 			samlproxy: item.samlproxy,
 			url: item.url,
+			endUserSpUrl: item.endUserSpUrl,
+			...smtp
 		}
 	}
 

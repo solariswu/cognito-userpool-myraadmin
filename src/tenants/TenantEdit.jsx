@@ -175,7 +175,7 @@ export const TenantEdit = () => {
               </Box>
             </Box>
           );
-        case "url":
+        case "endUserSpUrl":
           return (
             <Box sx={{ display: "flex" }}>
               <UrlField
@@ -292,9 +292,9 @@ export const TenantEdit = () => {
               <FunctionField
                 render={(record) => (
                   <DispCardItem
-                    title={"AWS URL"}
-                    source={"url"}
-                    showCopy={record.url}
+                    title={"End User Service Portal URL"}
+                    source={"endUserSpUrl"}
+                    showCopy={record.endUserSpUrl}
                   />
                 )}
               />
