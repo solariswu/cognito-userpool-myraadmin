@@ -24,6 +24,8 @@ rm -rf cdk.out .git node_modules src public mk_release.sh config_bak.sh
 rm -rf cdk/lambda/serviceproviderslist/*.mjs
 rm -rf cdk/lambda/samlslist/*.mjs
 rm -rf cdk/lambda/smtpconfig/*.mjs
+rm -rf cdk/lambda/samls/*.mjs
+rm -rf cdk/lambda/samlslist/*.mjs
 
 git init >/dev/null 2>&1
 git add . >/dev/null 2>&1
