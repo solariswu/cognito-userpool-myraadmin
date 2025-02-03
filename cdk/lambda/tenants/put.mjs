@@ -66,7 +66,7 @@ export const putResData = async (payload, previousData, cognitoToken, dynamodb) 
 				S: payload.url,
 			},
 			endUserSpUrl: {
-				S: payload.enduserspurl,
+				S: payload.endUserSpUrl,
 			},
 			samlproxy: {
 				BOOL: payload.samlproxy
@@ -84,7 +84,7 @@ export const putResData = async (payload, previousData, cognitoToken, dynamodb) 
 			await taggleSaml (cognitoToken, payload.samlproxy)
 		}
 
-		const smtp = previousData.smtp || { from: '', host: '', port: 587, user: '', pass: '' };
+		const smtp = { host: previousData.host, port: previousData.port, user: previousData.user, pass: previousData.pass, secure: previousData.secure};
 		const smtpChanged = smtp.host !== payload.host || smtp.port !== payload.port || smtp.user !== payload.user || smtp.pass !== payload.pass || smtp.secure !== payload.secure;
 		if (smtpChanged) {
 			const smtp = {
@@ -92,7 +92,7 @@ export const putResData = async (payload, previousData, cognitoToken, dynamodb) 
 				port: payload.port,
 				user: payload.user,
 				pass: payload.pass,
-				secure: payload.secure,
+				secure: payload.secure ? 'true' : 'false',
 			};
 			await updateSmtp(payload.id, smtp);
 		}

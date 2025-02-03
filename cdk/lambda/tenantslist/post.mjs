@@ -19,6 +19,9 @@ export const postResData = async (payload, dynamodb) => {
 			url: {
 				S: payload.url,
 			},
+			endUserSpUrl: {
+				S: payload.endUserSpUrl,
+			},
 			samlproxy: {
 				BOOL: payload.samlproxy
 			}
