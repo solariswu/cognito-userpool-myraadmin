@@ -21,7 +21,6 @@ interface CertificateStackProps extends StackProps {
 
 export class CertificateStack extends Stack {
 	siteCertificate: Certificate;
-	websiteCertificate: Certificate;
 
 	constructor(scope: Construct, id: string, props: CertificateStackProps) {
 		super(scope, id, props);
@@ -33,15 +32,6 @@ export class CertificateStack extends Stack {
 
 		this.siteCertificate = certificateResources.siteCertificate;
 
-		// if (props.crossRegionReferences) {
-
-		// 	const webCertificateResources = new CertificateResources(this, `certificate-${current_stage}-web`, {
-		// 		domain: `active.${props.domain}`,
-		// 		hostedZoneId: props.hostedZoneId ? props.hostedZoneId : '',
-		// 	});
-
-		// 	this.websiteCertificate = webCertificateResources.siteCertificate;
-		// }
 	}
 }
 

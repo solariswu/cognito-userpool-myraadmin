@@ -17,7 +17,6 @@ const certStack222 = new CertificateStack(app, 'CertStack222', {
 	env: certEnv,
 	domain: `${stage_config[current_stage].domainName}`,
 	hostedZoneId: stage_config[current_stage].hostedZoneId,
-	crossRegionReferences: stage_config[current_stage].env.region !== 'us-east-1',
 });
 
 // api cert shall be in the same region as the api

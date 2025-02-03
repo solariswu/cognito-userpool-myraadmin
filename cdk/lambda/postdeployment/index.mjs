@@ -66,33 +66,33 @@ export const handler = async (event) => {
         console.error('RequestId: ' + error.requestId);
     }
 
-    if (process.env.ADMIN_EMAIL && process.env.ADMIN_EMAIL.length > 0) {
-        try {
+    // if (process.env.ADMIN_EMAIL && process.env.ADMIN_EMAIL.length > 0) {
+    //     try {
 
-            const res = await cognito.send(new AdminCreateUserCommand({
-                UserPoolId: process.env.ADMINPOOL_ID,
-                Username: process.env.ADMIN_EMAIL, // required
-                UserAttributes: [ // AttributeListType
-                    { // AttributeType
-                        Name: "email", // required
-                        Value: process.env.ADMIN_EMAIL,
-                    },
-                    { // AttributeType
-                        Name: "email_verified",
-                        Value: "true",
-                    },
-                ],
-                DesiredDeliveryMediums: [ // DeliveryMediumListType
-                    "EMAIL",
-                ],
-            }));
-            console.log('create admin user res:', res);
-        }
-        catch (error) {
-            console.error('set ui customization failed with:', error);
-            console.error('RequestId: ' + error.requestId);
-        }
-    }
+    //         const res = await cognito.send(new AdminCreateUserCommand({
+    //             UserPoolId: process.env.ADMINPOOL_ID,
+    //             Username: process.env.ADMIN_EMAIL, // required
+    //             UserAttributes: [ // AttributeListType
+    //                 { // AttributeType
+    //                     Name: "email", // required
+    //                     Value: process.env.ADMIN_EMAIL,
+    //                 },
+    //                 { // AttributeType
+    //                     Name: "email_verified",
+    //                     Value: "true",
+    //                 },
+    //             ],
+    //             DesiredDeliveryMediums: [ // DeliveryMediumListType
+    //                 "EMAIL",
+    //             ],
+    //         }));
+    //         console.log('create admin user res:', res);
+    //     }
+    //     catch (error) {
+    //         console.error('set ui customization failed with:', error);
+    //         console.error('RequestId: ' + error.requestId);
+    //     }
+    // }
 
     try {
         const res = await cognito.send(new DescribeUserPoolClientCommand({
