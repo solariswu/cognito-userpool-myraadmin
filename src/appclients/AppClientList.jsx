@@ -71,9 +71,6 @@ export const AppClientList = props => {
         );
     }
 
-    console.log ('ygwu location', props.location)
-    console.log ('ygwu search q', new URLSearchParams(window.location.search))
-
     return (
         <Box sx={{ marginTop: 1, marginBottom: 0 }}>
             <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">

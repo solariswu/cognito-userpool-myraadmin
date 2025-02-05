@@ -27,7 +27,6 @@ export const AppClientCreate = () => {
       errors.serviceProviders = 'At least one service provider config is required';
     }
     else {
-      console.log('ygwu service providers', values.serviceProviders);
       if (errors.serviceProviders === undefined) {
         errors.serviceProviders = [];
       }
