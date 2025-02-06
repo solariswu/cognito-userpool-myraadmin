@@ -108,6 +108,7 @@ export const SamlCreate = () => {
             }
             <SimpleForm onSubmit={handleSamlSPCreate} toolbar={<SamlCreateToolbar />}>
                 <TextInput label="SAML SP Name" source="name" required fullWidth helperText={false} />
+                <TextInput source='metadataType' defaultValue='isUrl' style={{ display: 'none' }} />
                 {/* <RadioButtonGroupInput required label="Metadata document source" source="metadataType" choices={[
                     { id: 'isUrl', name: 'Metadata URL' },
                     { id: 'isFile', name: 'Upload Metadata File' },

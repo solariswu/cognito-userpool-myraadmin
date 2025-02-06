@@ -280,8 +280,6 @@ export const TenantEdit = () => {
         </Container>
       );
 
-    console.log("ygwu, edit tenant", record);
-
     return (
       <Container sx={{ padding: "15px" }}>
         <Box

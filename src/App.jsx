@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Route } from 'react-router-dom';
+import { BrowserRouter, Route } from 'react-router-dom';
 
 import { Admin, Resource, CustomRoutes } from 'react-admin';
 import dataProvider from './Component/dataProvider'
@@ -16,8 +16,6 @@ import tenants from "./tenants";
 
 import authProvider from "./Component/authProvider/authProvider";
 import LoginPage from "./Component/authProvider/LoginPage";
-
-import { MyAuthCallbackPage } from "./Component/authProvider/MyAuthCallbackPage";
 
 import { AmfaLayout } from "./AmfaLayout";
 
@@ -58,6 +56,7 @@ const i18nProvider = polyglotI18nProvider(locale => messages[locale], "en", {
 });
 export const App = () => (
   <>
+  <BrowserRouter>
     <Admin
       theme={theme}
       disableTelemetry
@@ -66,9 +65,9 @@ export const App = () => (
       loginPage={LoginPage}
       layout={AmfaLayout}
       locale="en"  // Add this...
-      i18nProvider={i18nProvider} >
+      i18nProvider={i18nProvider}
       requireAuth={true}
-      authCallbackPage={MyAuthCallbackPage}
+      >
       <Resource name="users" {...users} />"
       <Resource options={{ label: 'User Groups' }} name="groups" {...groups} />"
       <Resource options={{ label: 'Service Providers' }} name="appclients" {...appclients} />"
@@ -78,6 +77,7 @@ export const App = () => (
         <Route path="/user/import" element={<UserImport />} />
       </CustomRoutes>
     </Admin>
+    </BrowserRouter>
     <div style={{
       position: 'fixed', right: 0, bottom: 0, left: 0, zIndex: 100,
       padding: 6,

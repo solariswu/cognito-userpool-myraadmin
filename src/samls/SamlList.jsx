@@ -26,7 +26,6 @@ export const SAMLList = (props) => {
             })
             let data = await response.json();
             setConfigData(data);
-            // console.log('YGWU configdata', data)
         }
 
         fetchFeConfigs();

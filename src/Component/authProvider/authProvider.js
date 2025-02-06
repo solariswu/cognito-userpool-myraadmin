@@ -10,6 +10,8 @@ const redirectUri = `${window.location.protocol}//${window.location.host}/auth-c
 const oauth2Url = awsExports.aws_hosted_ui_url;
 const logoutUri = `${window.location.protocol}//${window.location.host}`;
 
+let logoutPromise = null;
+
 const userManager = new UserManager({
   authority: issuer,
   client_id: clientId,
@@ -34,18 +36,57 @@ const authProvider = {
     return; // Do not return anything, the login is still loading
   },
   logout: async () => {
-    console.log('logout')
+    // console.log('logout')
     // Remove the token from the local storage
-    if (localStorage.getItem('token')) {
-      localStorage.removeItem('token');
-      // console.log('logout url', `${oauth2Url}/logout?client_id=${clientId}&logout_uri=${logoutUri}`)
-      // 2. Redirect to the issuer to ask logout
-      window.location.href = `${oauth2Url}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
+    // if (localStorage.getItem('token')) {
+    //   localStorage.removeItem('token');
+    //   // console.log('logout url', `${oauth2Url}/logout?client_id=${clientId}&logout_uri=${logoutUri}`)
+    //   // 2. Redirect to the issuer to ask logout
+    //   window.location.href = `${oauth2Url}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
+    // }
+    // // return Promise.resolve({ redirectTo: '/login' });
+    // return ;
+    // // console.log ('logout promise', logoutPromise)
+
+    if (!logoutPromise) {
+      // console.log('logout promise null')
+      if (localStorage.getItem('token')) {
+        // console.log ('got token', localStorage.getItem('token'))
+        logoutPromise = new Promise(async (resolve, reject) => {
+          try {
+            localStorage.removeItem('token');
+            // console.log('logout token removed')
+            // await userManager.signoutRedirect();
+            window.location.href = `${oauth2Url}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
+            return resolve();
+          } catch (error) {
+            // console.log('logout error', error)
+            return reject({
+              redirectTo: false,
+              message: error.message,
+            });
+          }
+        });
+      }
+      else {
+        // console.log('logout no token')
+        logoutPromise = Promise.resolve();
+        // return '/login'
+        // await userManager.signoutRedirect();
+        // logoutPromise =  new Promise(async (resolve, reject) => {
+        //   return reject({
+        //     redirectTo: '/login',
+        //     message: '',
+        //   });
+        // });
+        // cleanup();
+        return logoutPromise;
+      }
     }
-    return Promise.resolve();
+    return '/login';
   },
   checkError: () => {
-    console.log('checkError')
+    // console.log('checkError')
     // localStorage.removeItem("token");
     return Promise.resolve();
   },
@@ -75,7 +116,6 @@ const authProvider = {
     }
 
     const profile = getProfileFromToken(token);
-    // console.log ('ygwu profile', profile)
 
     return Promise.resolve({
       id: profile.sub,
@@ -86,9 +126,11 @@ const authProvider = {
   handleCallback: async () => {
     // We came back from the issuer with ?code infos in query params
     const { searchParams } = new URL(window.location.href);
+    // console.log('handlecallback - searchParams', searchParams)
+    // console.log('handlecallback - window.location.href', window.location.href)
     const code = searchParams.get("code");
     const state = searchParams.get("state");
-    // console.log('code', code, 'state', state)
+    // console.log('handlecallback - code', code, 'state', state)
 
     if (!code || !state) {
       return Promise.resolve()
@@ -109,8 +151,12 @@ const authProvider = {
       grant_type: "authorization_code",
       client_id: clientId,
       redirect_uri: redirectUri,
-      code: code, code_verifier
+      code: code,
+      code_verifier
     };
+
+    // console.log ('fetching from', `${oauth2Url}/oauth2/token`)
+    // console.log('params', params)
 
     let body = Object.keys(params)
       .map((key) => { return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]); })
