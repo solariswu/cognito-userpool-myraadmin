@@ -60,7 +60,8 @@ export default function ServiceProviderForm(props) {
                                                 label="Service Provider SignIn Callback/Redirect URL"
                                                 source="spcallback"
                                                 validate={[required(), isHttpsOrHttpLocal]}
-                                                defaultValue={'http://localhost'}
+                                                placeholder='http://localhost'
+                                                // defaultValue={'http://localhost'}
                                             />
                                             <TextInput
                                                 fullWidth
@@ -73,7 +74,8 @@ export default function ServiceProviderForm(props) {
                                                 label="Service Provider Login Url"
                                                 source="sploginurl"
                                                 validate={[required()]}
-                                                defaultValue={SPPortalUrl}
+                                                placeholder={SPPortalUrl}
+                                                // defaultValue={SPPortalUrl}
                                             />
                                             <TextInput
                                                 fullWidth
