@@ -1,0 +1,4 @@
+email,given_name,family_name,phone_number,group,middle_name,name,profile,picture,gender,birthdate,address,alter-email,voice-number,locale
+example1@gmail.com,hello,import,+19998887777,"user, exec",hello,world,hisprofile,http://mpic.com,male,1990-01-01,the home address,thankyou@testmail.com,+12222333,Washington
+example2@hotmail.com,happy,world,+15554443333,"admin"
+example3@email.com,wonder,day,+1555444222,"user",,,,,female,,home
