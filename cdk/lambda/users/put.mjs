@@ -126,7 +126,7 @@ export const putResData = async (data, cognitoISP) => {
             }
         })
 
-        if (user.email !== data.email) {
+        if (user.email != data.email) {
             attributes.push({ "Name": 'email', "Value": data.email ? data.email : '' });
             user.email = data.email;
             if (data.email && email.trim().length > 0) {
@@ -134,7 +134,7 @@ export const putResData = async (data, cognitoISP) => {
                 user.email_verified = true;
             }
         }
-        if (user.phone_number !== data.phone_number) {
+        if (user.phone_number != data.phone_number) {
             attributes.push({ "Name": 'phone_number', "Value": data.phone_number ? data.phone_number : '' });
             user.phone_number = data.phone_number;
             if (data.phone_number && data.phone_number.trim().length > 0) {
@@ -146,7 +146,7 @@ export const putResData = async (data, cognitoISP) => {
             newOtpValues.push(data.phone_number);
         }
 
-        if (user['alter-email'] !== data['alter-email']) {
+        if (user['alter-email'] != data['alter-email']) {
             attributes.push({ "Name": 'custom:alter-email', "Value": data['alter-email'] ? data['alter-email'] : '' });
             user['alter-email'] = data['alter-email'];
 
@@ -154,7 +154,7 @@ export const putResData = async (data, cognitoISP) => {
             newOtpValues.push(data['alter-email']);
         }
 
-        if (user['voice-number'] !== data['voice-number']) {
+        if (user['voice-number'] != data['voice-number']) {
             attributes.push({ "Name": 'custom:voice-number', "Value": data['voice-number'] ? data['voice-number'] : '' });
             user['voice-number'] = data['voice-number'];
 
