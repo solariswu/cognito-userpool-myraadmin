@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { List, ResourceContextProvider, TopToolbar, CreateButton, Datagrid, TextField, FunctionField, Confirm, useDelete, BooleanField } from "react-admin"
+import { List, ResourceContextProvider, TopToolbar, CreateButton, Datagrid, TextField, FunctionField, Confirm, useDelete, BooleanField, Button } from "react-admin"
 import awsmobile from '../aws-export';
 import CircularProgress from '@mui/material/CircularProgress';
 import Container from '@mui/material/Container';
@@ -84,13 +84,14 @@ export const SAMLList = (props) => {
                         </a> : ''
                     } />
                     <FunctionField label="Metadata" render={record => record.metadataUrl ?
-                        <a href={record.metadataUrl} rel="noreferrer" target="_blank">View Metadata</a> : ''
+                        <a href={record.metadataUrl} rel="noreferrer" target="_blank">Download SP Metadata</a> : ''
                     } />
                     <BooleanField source="released" label="Show to end user"
                         TrueIcon={VerifiedIcon} FalseIcon={NotInterestedIcon} />
                     <FunctionField label="Logo" render={record => record.logoUrl ?
                         <img src={record.logoUrl} alt="logo" width="48" height="48" /> : ''
                     } />
+                    <Button label="Edit" color="primary" icon="Edit" />
                 </Datagrid>
             </List>
         </ResourceContextProvider>

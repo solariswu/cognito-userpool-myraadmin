@@ -7,13 +7,19 @@ import { validateUrl } from '../utils/validation';
 
 export const SamlEdit = () => {
 
+    const toSAMLList = (e) => {
+        e = e || window.event;
+        e.preventDefault();
+        window.location.href = '/appclients#=1';
+    }
+
     const EditActions = () => (
         <TopToolbar>
           <DeleteButton
             confirmTitle="Are you sure you want to delete this sp?"
             confirmContent=""
           />
-          <ListButton />
+          <ListButton onClick={toSAMLList} />
         </TopToolbar>
       );
 
@@ -40,13 +46,13 @@ export const SamlEdit = () => {
                 </Box>
                 <Box sx={{ margin: '10px 0' }}>
                     <FunctionField label="Metadata" render={record => record.metadataUrl ?
-                        <a href={record.metadataUrl} rel="noreferrer" target="_blank">View Metadata</a> : ''
+                        <a href={record.metadataUrl} rel="noreferrer" target="_blank">Download SP Metadata</a> : ''
                     } />
                 </Box>
                 <SimpleForm >
-                    <TextInput source="serviceUrl" required validate={validateUrl} fullWidth helperText={false} />
+                    <TextInput label="Service URL/Callback URL/Assertion Consumer Service(ACS) URL" source="serviceUrl" required validate={validateUrl} fullWidth helperText={false} />
                     <div style={{ height: '2em' }} />
-                    <TextInput source="logoUrl" validate={validateUrl} fullWidth helperText={false} />
+                    <TextInput label="Logo URL (Image Size: 25x25)" source="logoUrl" validate={validateUrl} fullWidth helperText={false} />
                     <div style={{ height: '0.5em' }} />
                     <BooleanInput source='released' fullWidth label="Show to end user" />
                     <div style={{ height: '0.5em' }} />

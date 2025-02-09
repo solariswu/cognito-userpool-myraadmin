@@ -1,5 +1,4 @@
 import { SamlCreate } from "./SamlCreate";
-// import { SamlShow } from "./SamlShow";
 import { SamlEdit } from "./SamlEdit";
 
 import CableIcon from '@mui/icons-material/Cable';

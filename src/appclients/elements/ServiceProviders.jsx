@@ -79,7 +79,7 @@ export default function ServiceProviderForm(props) {
                                             />
                                             <TextInput
                                                 fullWidth
-                                                label="Service Provider Logo Url"
+                                                label="Service Provider Logo Url (Image Size 25x25)"
                                                 source="splogourl"
                                             />
                                             <BooleanInput
