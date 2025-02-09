@@ -1,6 +1,6 @@
 {
   "name": "apersona-aws-idp-mgmt-portal",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "dependencies": {
     "@mui/icons-material": "^5.11.16",
