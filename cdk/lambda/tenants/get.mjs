@@ -50,6 +50,11 @@ export const getResData = async (id, cognitoToken, dynamodb) => {
 			endUserSpUrl: item.endUserSpUrl.S,
 			samlproxy: item.samlproxy?.BOOL,
 			samlIdPMetadataUrl: process.env.SAMLPROXY_METADATA_URL,
+			adminApiUrl: `https://api.adminportal.${process.env.AMFA_BASE_URL}`,
+			endUserSpRegion: process.env.AWS_REGION,
+			endUserSpWebClientId: process.env.SP_PORTAL_CLIENT_ID,
+			endUserSpUserpoolId: process.env.USER_POOL_ID,
+			endUserSpOauthDomain: process.env.END_USER_SP_OAUTH_DOMAIN,
 			...smtp,
 			// branding: item.branding,
 		};
