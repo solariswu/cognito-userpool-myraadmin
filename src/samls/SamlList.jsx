@@ -76,7 +76,7 @@ export const SAMLList = (props) => {
                 <Datagrid rowClick={/*false*/"show"} bulkActionButtons={false} optimized key={configData}>
                     <TextField source="name" />
                     <TextField source="entityId" />
-                    <FunctionField label="Service Url (ACS)" render={record => record.serviceUrl ?
+                    <FunctionField label="SP Login URL" render={record => record.serviceUrl ?
                         <a href={record.serviceUrl} rel="noreferrer" target="_blank">
                             {record.serviceUrl.length > 150 ?
                                 record.serviceUrl.substring(0, 40) + '...' + record.serviceUrl.substring(record.serviceUrl.length - 20, record.serviceUrl.length) :

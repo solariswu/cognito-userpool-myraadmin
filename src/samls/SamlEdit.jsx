@@ -50,7 +50,7 @@ export const SamlEdit = () => {
                     } />
                 </Box>
                 <SimpleForm >
-                    <TextInput label="Service URL/Callback URL/Assertion Consumer Service(ACS) URL" source="serviceUrl" required validate={validateUrl} fullWidth helperText={false} />
+                    <TextInput label="SP Login URL" source="serviceUrl" required validate={validateUrl} fullWidth helperText={false} />
                     <div style={{ height: '2em' }} />
                     <TextInput label="Logo URL (Image Size: 25x25)" source="logoUrl" validate={validateUrl} fullWidth helperText={false} />
                     <div style={{ height: '0.5em' }} />

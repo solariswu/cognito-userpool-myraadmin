@@ -117,7 +117,7 @@ export const SamlCreate = () => {
                 <div style={{ height: '2em' }} />
                 <TextInput label="SP Metadata URL" source="metadataUrl" required fullWidth helperText={false} validate={validateUrl} />
                 <div style={{ height: '2em' }} />
-                <TextInput source="serviceUrl" label="Service URL/Callback URL/Assertion Consumer Service(ACS) URL" required validate={validateUrl} fullWidth helperText={false} />
+                <TextInput source="serviceUrl" label="SP Login URL" required validate={validateUrl} fullWidth helperText={false} />
                 <div style={{ height: '2em' }} />
                 <TextInput source="logoUrl" label="Logo URL (Image Size: 25x25)" validate={validateUrl} fullWidth helperText={false} />
                 <BooleanInput source='released' label="Show to end user" />
