@@ -488,6 +488,7 @@ export class SSOApiGateway {
                 SAML_CLIENTID: samlClientId,
                 SAMLPROXY_METADATA_URL: samlproxy_metadata_url,
                 USER_POOL_ID: userPoolId,
+                ROOT_DOMAIN_NAME: process.env.ROOT_DOMAIN_NAME? process.env.ROOT_DOMAIN_NAME : '',
                 SP_PORTAL_CLIENT_ID: spPortalClientId,
                 END_USER_SP_OAUTH_DOMAIN: `https://${userPoolDomain}.auth.${this.region}.amazoncognito.com/`,
                 TENANT_ID: tenant_id ? tenant_id : 'unknowntid',
