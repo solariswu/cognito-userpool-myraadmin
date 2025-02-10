@@ -54,7 +54,7 @@ export const getResData = async (id, cognitoToken, dynamodb) => {
 			endUserSpRegion: process.env.AWS_REGION,
 			endUserSpWebClientId: process.env.SP_PORTAL_CLIENT_ID,
 			endUserSpUserpoolId: process.env.USER_POOL_ID,
-			endUserSpOauthDomain: process.env.END_USER_SP_OAUTH_DOMAIN,
+			endUserSpOauthDomain: smtp.oauthdomain,
 			...smtp,
 			// branding: item.branding,
 		};
