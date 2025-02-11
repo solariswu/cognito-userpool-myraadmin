@@ -179,7 +179,9 @@ export class SSOApiGateway {
 
     }
 
-    public createAdminApiEndpoints(userPoolId: string, samlClientId: string, samlClientSecrect: string) {
+    public createAdminApiEndpoints(userPoolId: string, samlClientId: string, samlClientSecrect: string,
+            spPortalClientId: string, userPoolDomain: string
+    ) {
         const resourceTypes = ['users', 'groups', 'idps', 'appclients'];
 
         resourceTypes.forEach(resourceType => {
@@ -242,7 +244,8 @@ export class SSOApiGateway {
 
 
         // tenants apis
-        const lambdaList = this.createAmfaTenantsLambda(AMFATENANT_TABLE, 'tenantslist', samlClientId);
+        const lambdaList = this.createAmfaTenantsLambda(AMFATENANT_TABLE, 'tenantslist', samlClientId,
+            userPoolId, spPortalClientId, userPoolDomain);
         // 👇 add route for GET /resource
         this.api.addRoutes({
             path: '/tenants',
@@ -253,7 +256,8 @@ export class SSOApiGateway {
             ),
             authorizer: this.authorizor,
         });
-        const lambda = this.createAmfaTenantsLambda(AMFATENANT_TABLE, 'tenants', samlClientId);
+        const lambda = this.createAmfaTenantsLambda(AMFATENANT_TABLE, 'tenants', samlClientId,
+            userPoolId, spPortalClientId, userPoolDomain);
         // 👇 add route for CRUD /resource/id
         this.api.addRoutes({
             path: '/tenants/{id}',
@@ -279,7 +283,7 @@ export class SSOApiGateway {
         });
 
         // amfa smtp config api
-        const smtplambda = this.createSmtpConfigLambda ();
+        const smtplambda = this.createSmtpConfigLambda();
 
         this.api.addRoutes({
             path: '/smtpconfig',
@@ -466,7 +470,11 @@ export class SSOApiGateway {
         return lambda;
     }
 
-    private createAmfaTenantsLambda(tableName: string, lambdaName: string, samlClientId: string) {
+    private createAmfaTenantsLambda(
+        tableName: string, lambdaName: string, samlClientId: string,
+        userPoolId: string, spPortalClientId: string,
+        userPoolDomain: string
+    ) {
 
         const lambda = new Function(this.scope, lambdaName, {
             runtime: Runtime.NODEJS_20_X,
@@ -479,6 +487,10 @@ export class SSOApiGateway {
                 SAMLPROXY_RELOAD_URL: samlproxy_reload_url,
                 SAML_CLIENTID: samlClientId,
                 SAMLPROXY_METADATA_URL: samlproxy_metadata_url,
+                USER_POOL_ID: userPoolId,
+                ROOT_DOMAIN_NAME: process.env.ROOT_DOMAIN_NAME? process.env.ROOT_DOMAIN_NAME : '',
+                SP_PORTAL_CLIENT_ID: spPortalClientId,
+                END_USER_SP_OAUTH_DOMAIN: `https://${userPoolDomain}.auth.${this.region}.amazoncognito.com/`,
                 TENANT_ID: tenant_id ? tenant_id : 'unknowntid',
             },
             timeout: Duration.minutes(5)

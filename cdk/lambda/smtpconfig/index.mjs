@@ -30,13 +30,22 @@ export const handler = async (event) => {
         const transporter = nodemailer.createTransport({
             host: secret.host,
             port: secret.port,
-            secure: secret.secure,
+            secure: secret.secure === 'true' || (secret.secure ? secret.secure : false),
             auth: {
                 user: secret.user,
                 pass: secret.pass,
             },
         });
 
+        console.log('smtp test transporter:', {
+            host: secret.host,
+            port: secret.port,
+            secure: secret.secure === 'true' || (secret.secure ? secret.secure : false),
+            auth: {
+                user: secret.user,
+                pass: secret.pass,
+            },
+        });
         try {
             // send mail with defined transport object
             const info = await transporter.sendMail({

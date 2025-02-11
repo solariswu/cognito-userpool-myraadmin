@@ -33,7 +33,7 @@ const taggleSaml = async (cognitoToken, enable) => {
 			clientId: process.env.SAML_CLIENTID,
 		}), // body data type must match "Content-Type" header
 	});
-	console.log('samlslist post result', response);
+	console.log('samlslist put result', response);
 
 	const res = await fetch(samlReloadUrl, {
 		method: "GET", // *GET, POST, PUT, DELETE, etc.
@@ -78,37 +78,25 @@ export const putResData = async (payload, previousData, cognitoToken, dynamodb) 
 
 	const item = await dynamodb.send(new PutItemCommand(params));
 
-	if (item) {
 
-		if (payload.samlproxy !== previousData.samlproxy) {
-			await taggleSaml (cognitoToken, payload.samlproxy)
-		}
-
-		const smtp = { host: previousData.host, port: previousData.port, user: previousData.user, pass: previousData.pass, secure: previousData.secure};
-		const smtpChanged = smtp.host !== payload.host || smtp.port !== payload.port || smtp.user !== payload.user || smtp.pass !== payload.pass || smtp.secure !== payload.secure;
-		if (smtpChanged) {
-			const smtp = {
-				host: payload.host,
-				port: payload.port,
-				user: payload.user,
-				pass: payload.pass,
-				secure: payload.secure ? 'true' : 'false',
-			};
-			await updateSmtp(payload.id, smtp);
-		}
-
-		return {
-			id: item.id,
-			name: item.name,
-			contact: item.contact,
-			samlproxy: item.samlproxy,
-			url: item.url,
-			endUserSpUrl: item.endUserSpUrl,
-			...smtp
-		}
+	if (payload.samlproxy !== previousData.samlproxy) {
+		await taggleSaml(cognitoToken, payload.samlproxy)
 	}
 
-	return null;
+	const smtp = { host: previousData.host, port: previousData.port, user: previousData.user, pass: previousData.pass, secure: previousData.secure };
+	const smtpChanged = smtp.host !== payload.host || smtp.port !== payload.port || smtp.user !== payload.user || smtp.pass !== payload.pass || smtp.secure !== payload.secure;
+	if (smtpChanged) {
+		const smtp = {
+			host: payload.host,
+			port: payload.port,
+			user: payload.user,
+			pass: payload.pass,
+			secure: payload.secure ? 'true' : 'false',
+		};
+		await updateSmtp(payload.id, smtp);
+	}
+
+	return payload
 }
 
 export default putResData;

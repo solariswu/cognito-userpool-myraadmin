@@ -30,6 +30,7 @@ import {
   NumberInput,
   PasswordInput,
   useRecordContext,
+  FormDataConsumer,
 } from "react-admin";
 
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -97,7 +98,7 @@ export const TenantEdit = () => {
       : notify(`SMTP Email sent successfully`, { type: "success" });
   };
 
-  const TestSMTPButton = () =>
+  const TestSMTPButton = ({ formData }) =>
     inSending ? (
       <CircularProgress />
     ) : (
@@ -107,6 +108,7 @@ export const TenantEdit = () => {
         variant="contained"
         color="primary"
         startIcon={null}
+        disabled={!formData || !formData.toUser || !formData.toUser.length}
       >
         Test SMTP
       </Button>
@@ -257,6 +259,159 @@ export const TenantEdit = () => {
     </TopToolbar>
   );
 
+  const MobileTokenCard = () => (
+    <Card sx={{ minWidth: "800px" }}>
+      <Card>
+        <CardContent>
+          <Typography gutterBottom variant="h5" component="div">
+            Mobile Token API Settings for aPersona ASM
+          </Typography>
+          <FunctionField
+            render={(record) => (
+              <DispCardItem
+                title={"Mobile Token Client Id"}
+                source={"clientId"}
+                showCopy={record.clientId}
+              />
+            )}
+          />
+          <Divider />
+          <FunctionField
+            render={(record) => (
+              <DispCardItem
+                title={"Mobile Token Client Secret"}
+                source={"clientSecret"}
+                showCopy={record.clientSecret}
+              />
+            )}
+          />
+          <Divider />
+          <FunctionField
+            render={(record) => (
+              <DispCardItem
+                title={"Mobile Token Auth Endpoint"}
+                source={"domain"}
+                showCopy={record.domain}
+              />
+            )}
+          />
+          <Divider />
+          <FunctionField
+            render={(record) => (
+              <>
+                <Box sx={{ paddingTop: "10px" }}>Mobile Token API endpoint</Box>
+                <Box sx={{ display: "flex" }}>
+                  <Typography variant="body" color="text.secondary">
+                    {record.url.replace("https://", "https://api.") +
+                      "/totptoken"}
+                  </Typography>
+                  <IconButton
+                    onClick={() =>
+                      handleClick(
+                        record.url.replace("https://", "https://api.") +
+                          "/totptoken",
+                      )
+                    }
+                    size="small"
+                  >
+                    <ContentCopyIcon />
+                  </IconButton>
+                </Box>
+              </>
+            )}
+          />
+          <Divider />
+        </CardContent>
+      </Card>
+    </Card>
+  );
+
+  const TenantInfoCard = () => (
+    <Card>
+      <CardContent>
+        <FunctionField
+          render={(record) => (
+            <DispCardItem
+              title={"Tenant ID"}
+              source={"id"}
+              showCopy={record.id}
+            />
+          )}
+        />
+        <Divider />
+        <FunctionField
+          render={(record) => (
+            <DispCardItem
+              title={"Tenant Name"}
+              source={"name"}
+              showCopy={record.name}
+            />
+          )}
+        />
+        <Divider />
+      </CardContent>
+    </Card>
+  );
+
+  const SPEndUserInfoCard = () => (
+    <Card>
+      <CardContent>
+        <Typography gutterBottom variant="h5" component="div">
+          SAML End User Service Portal Info
+        </Typography>
+        <FunctionField
+          render={(record) => (
+            <DispCardItem
+              title={"End User Service Portal API URL"}
+              source={"adminApiUrl"}
+              showCopy={record.adminApiUrl}
+            />
+          )}
+        />
+        <FunctionField
+          render={(record) => (
+            <DispCardItem
+              title={"End User Service Region"}
+              source={"endUserSpRegion"}
+              showCopy={record.endUserSpRegion}
+            />
+          )}
+        />
+        <Divider />
+        <FunctionField
+          render={(record) => (
+            <DispCardItem
+              title={"End User Service Userpools Web Client Id"}
+              source={"endUserSpWebClientId"}
+              showCopy={record.endUserSpWebClientId}
+            />
+          )}
+        />
+        <Divider />
+        <FunctionField
+          render={(record) => (
+            <DispCardItem
+              title={"End User Service Userpools Id"}
+              source={"endUserSpUserpoolId"}
+              showCopy={record.endUserSpUserpoolId}
+            />
+          )}
+        />
+        <Divider />
+        <FunctionField
+          render={(record) => (
+            <DispCardItem
+              title={"End User Service OAuth Domain"}
+              source={"endUserSpOauthDomain"}
+              showCopy={record.endUserSpOauthDomain}
+            />
+          )}
+        />
+        <Divider />
+      </CardContent>
+    </Card>
+  );
+
   const MyForm = () => {
     const record = useRecordContext();
 
@@ -281,212 +436,111 @@ export const TenantEdit = () => {
       );
 
     return (
-      <Container sx={{ padding: "15px" }}>
-        <Box
-          sx={{
-            margin: 8,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <TextField source="name" variant="h4" />
-        </Box>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={6} lg={5}>
-            <Card>
-              <CardContent>
-                <FunctionField
-                  render={(record) => (
-                    <DispCardItem
-                      title={"Tenant ID"}
-                      source={"id"}
-                      showCopy={record.id}
-                    />
-                  )}
-                />
-                <Divider />
-                <FunctionField
-                  render={(record) => (
-                    <DispCardItem
-                      title={"Tenant Name"}
-                      source={"name"}
-                      showCopy={record.name}
-                    />
-                  )}
-                />
-                <Divider />
-              </CardContent>
-            </Card>
-            <Box sx={{ marginTop: "20px" }} />
-
-            <FunctionField
-              render={(record) => (
-                <DispCardItem
-                  title={"End User Service Portal URL"}
-                  source={"endUserSpUrl"}
-                  showCopy={record.endUserSpUrl}
-                />
-              )}
-            />
-            <Box sx={{ marginTop: "40px" }} />
-            {/* <Card>
-          <CardContent> */}
-            {/* <BooleanInput label="Enable SAML" source="samlproxy" /> */}
-            <FunctionField
-              render={(record) => (
-                <DispCardItem
-                  title={"SAML IdP Metadata URL"}
-                  source={"samlIdPMetadataUrl"}
-                  showCopy={record.samlIdPMetadataUrl}
-                />
-              )}
-            />
-            {/* </CardContent>
-        </Card> */}
-          </Grid>
-          <Grid item xs={12} sm={6} md={6} lg={5}>
-            <Card sx={{ minWidth: "800px" }}>
-              <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
-                  SMTP server
-                </Typography>
-                <Grid container sx={{ marginTop: "20px" }}>
-                  <Grid item xs={12} sm={5} md={5} lg={4}>
-                    <TextInput source="host" id="host" />
-                  </Grid>
-                  <Grid item xs={12} sm={5} md={5} lg={4}>
-                    <NumberInput source="port" id="port" />
-                  </Grid>
-                  <Grid item xs={12} sm={5} md={5} lg={4}>
-                    <BooleanInput source="secure" id="secure" />
-                  </Grid>
-                  <Grid item xs={12} sm={5} md={5} lg={4}>
-                    <TextInput source="user" id="user" />
-                  </Grid>
-                  <Grid item xs={12} sm={5} md={5} lg={4}>
-                    <PasswordInput source="pass" id="pass" />
+      <FormDataConsumer>
+        {({ formData, ...rest }) => {
+          return (
+            <Container sx={{ padding: "15px" }}>
+              <Box
+                sx={{
+                  margin: 8,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <TextField source="name" variant="h4" />
+              </Box>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={6} lg={5}>
+                  <TenantInfoCard />
+                  <Box sx={{ marginTop: "20px" }} />
+                  <Card>
+                    <CardContent>
+                      <FunctionField
+                        render={(record) => (
+                          <DispCardItem
+                            title={"End User Service Portal URL"}
+                            source={"endUserSpUrl"}
+                            showCopy={record.endUserSpUrl}
+                          />
+                        )}
+                      />
+                      <Divider />
+                      {/* <Box sx={{ marginTop: "20px" }} />
+                 <Card>
+                  <CardContent>
+                  <BooleanInput label="Enable SAML" source="samlproxy" /> */}
+                      <FunctionField
+                        render={(record) => (
+                          <DispCardItem
+                            title={"SAML IdP Metadata URL"}
+                            source={"samlIdPMetadataUrl"}
+                            showCopy={record.samlIdPMetadataUrl}
+                          />
+                        )}
+                      />
+                      <Divider />
+                    </CardContent>
+                  </Card>
+                  <Box sx={{ marginTop: "20px" }} />
+                  <SPEndUserInfoCard />
+                </Grid>
+                <Grid item xs={12} sm={6} md={6} lg={5}>
+                  <Card sx={{ minWidth: "800px" }}>
+                    <CardContent>
+                      <Typography gutterBottom variant="h5" component="div">
+                        SMTP server
+                      </Typography>
+                      <Grid container sx={{ marginTop: "20px" }}>
+                        <Grid item xs={12} sm={5} md={5} lg={4}>
+                          <TextInput source="host" id="host" />
+                        </Grid>
+                        <Grid item xs={12} sm={5} md={5} lg={4}>
+                          <NumberInput source="port" id="port" />
+                        </Grid>
+                        <Grid item xs={12} sm={5} md={5} lg={4}>
+                          <BooleanInput source="secure" id="secure" />
+                        </Grid>
+                        <Grid item xs={12} sm={5} md={5} lg={4}>
+                          <TextInput source="user" id="user" />
+                        </Grid>
+                        <Grid item xs={12} sm={5} md={5} lg={4}>
+                          <PasswordInput source="pass" id="pass" />
+                        </Grid>
+                      </Grid>
+                      <Divider />
+                      <Box sx={{ marginTop: "10px" }} />
+                      <Grid container>
+                        <Grid item xs={12} sm={5} md={5} lg={4}>
+                          <TextInput
+                            source="toUser"
+                            type="email"
+                            label="test email address"
+                            id="toUser"
+                            disabled={inSending}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={5} md={5} lg={4}>
+                          <TestSMTPButton formData={formData} {...rest} />
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                  <Box sx={{ marginTop: "20px" }} />
+                  <MobileTokenCard />
+                  <Box sx={{ marginTop: "20px" }} />
+                </Grid>
+                <Grid container justify="flex-end">
+                  <Grid item xs={9} sm={9} md={9} lg={9} />
+                  <Grid item xs={2} sm={2} md={2} lg={2}>
+                    <SaveButton label="Update" />
                   </Grid>
                 </Grid>
-                <Divider />
-                <Box sx={{ marginTop: "10px" }} />
-                <Grid container>
-                  <Grid item xs={12} sm={5} md={5} lg={4}>
-                    <TextInput
-                      source="toUser"
-                      type="email"
-                      label="test email address"
-                      id="toUser"
-                      disabled={inSending}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={5} md={5} lg={4}>
-                    <TestSMTPButton />
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-            {/* <Card sx={{ minWidth: "800px" }}>
-          <CardContent>
-            <FunctionField
-              render={(record) => (
-                <DispCardItem
-                  title={"Mobile Token Salt"}
-                  source={"Mobile_Token_Salt"}
-                  showCopy={record.Mobile_Token_Salt}
-                />
-              )}
-            />
-            <Divider />
-            <FunctionField
-              render={(record) => (
-                <DispCardItem
-                  title={"Mobile Token Key"}
-                  source={"Mobile_Token_Key"}
-                  showCopy={record.Mobile_Token_Key}
-                />
-              )}
-            />
-            <Divider />
-          </CardContent>
-        </Card>*/}
-            <Box sx={{ marginTop: "20px" }} />
-            <Card sx={{ minWidth: "800px" }}>
-              <Card>
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Mobile Token API Settings for aPersona ASM
-                  </Typography>
-                  <FunctionField
-                    render={(record) => (
-                      <DispCardItem
-                        title={"Mobile Token Client Id"}
-                        source={"clientId"}
-                        showCopy={record.clientId}
-                      />
-                    )}
-                  />
-                  <Divider />
-                  <FunctionField
-                    render={(record) => (
-                      <DispCardItem
-                        title={"Mobile Token Client Secret"}
-                        source={"clientSecret"}
-                        showCopy={record.clientSecret}
-                      />
-                    )}
-                  />
-                  <Divider />
-                  <FunctionField
-                    render={(record) => (
-                      <DispCardItem
-                        title={"Mobile Token Auth Endpoint"}
-                        source={"domain"}
-                        showCopy={record.domain}
-                      />
-                    )}
-                  />
-                  <Divider />
-                  <FunctionField
-                    render={(record) => (
-                      <>
-                        <Box sx={{ paddingTop: "10px" }}>
-                          Mobile Token API endpoint
-                        </Box>
-                        <Box sx={{ display: "flex" }}>
-                          <Typography variant="body" color="text.secondary">
-                            {record.url.replace("https://", "https://api.") +
-                              "/totptoken"}
-                          </Typography>
-                          <IconButton
-                            onClick={() =>
-                              handleClick(
-                                record.url.replace("https://", "https://api.") +
-                                  "/totptoken",
-                              )
-                            }
-                            size="small"
-                          >
-                            <ContentCopyIcon />
-                          </IconButton>
-                        </Box>
-                      </>
-                    )}
-                  />
-                  <Divider />
-                </CardContent>
-              </Card>
-            </Card>
-            <Box sx={{ marginTop: "20px" }} />
-          </Grid>
-          <Grid container justify="flex-end">
-            <Grid item xs={9} sm={9} md={9} lg={9} />
-            <Grid item xs={2} sm={2} md={2} lg={2}>
-              <SaveButton label="Update" />
-            </Grid>
-          </Grid>
-        </Grid>
-      </Container>
+              </Grid>
+            </Container>
+          );
+        }}
+      </FormDataConsumer>
     );
   };
   // if (isPending) return <CircularProgress sx={{ marginRight: 1 }} size={18} thickness={2} />
