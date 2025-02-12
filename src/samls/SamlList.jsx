@@ -75,15 +75,15 @@ export const SAMLList = (props) => {
             >
                 <Datagrid rowClick={/*false*/"show"} bulkActionButtons={false} optimized key={configData}>
                     <TextField source="name" />
-                    <TextField source="entityId" />
-                    <FunctionField label="SP Login URL" render={record => record.serviceUrl ?
+                    <TextField source="entityId" sx={{ overflowWrap: "break-word", wordWrap: "break-word",wordBreak: "break-word" }} />
+                    <FunctionField label="SP Login URL"  sx={{ overflowWrap: "break-word", wordWrap: "break-word",wordBreak: "break-word" }}  render={record => record.serviceUrl ?
                         <a href={record.serviceUrl} rel="noreferrer" target="_blank">
                             {record.serviceUrl.length > 150 ?
                                 record.serviceUrl.substring(0, 40) + '...' + record.serviceUrl.substring(record.serviceUrl.length - 20, record.serviceUrl.length) :
                                 record.serviceUrl}
                         </a> : ''
                     } />
-                    <FunctionField label="Metadata" render={record => record.metadataUrl ?
+                    <FunctionField label="Metadata"  sx={{ overflowWrap: "break-word", wordWrap: "break-word",wordBreak: "break-word" }}  render={record => record.metadataUrl ?
                         <a href={record.metadataUrl} rel="noreferrer" target="_blank">Download SP Metadata</a> : ''
                     } />
                     <BooleanField source="released" label="Show to end user"
