@@ -65,7 +65,7 @@ export const SamlCreate = () => {
         if (data.metadataType === 'isUrl' && data.metadataUrl && data.metadataUrl.trim().length) {
             data.metadataUrl = data.metadataUrl.trim()
             await create('samls', { data })
-            redirect('/appclients?t=1')
+            redirect('/appclients#=1')
         }
         else if (data.metadataType === 'isFile' && data.metadataFile) {
             var fr = new FileReader();
