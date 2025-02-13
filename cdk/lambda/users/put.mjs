@@ -115,18 +115,30 @@ export const putResData = async (data, cognitoISP) => {
         let newOtpValues = [];
         data.nickname = data.given_name + ' ' + data.family_name;
 
+        // user attributes non-mfa related
         const attributesList = ['locale', 'middle_name',
-            'name', 'profile', 'picture', 'gender', 'birthdate', 'address', 'family_name', 'given_name', 'nickname'];
+            'name', 'profile', 'picture', 'gender', 'birthdate',
+            'address', 'family_name', 'given_name', 'nickname'];
         // update user attributes
         attributesList.map(attributeName => {
-            const newValue = data[attributeName];
-            if (user[attributeName] !== newValue) {
-                attributes.push({ "Name": attributeName, "Value": newValue ? newValue : '' });
-                user[attributeName] = newValue;
+            const newValue = data[attributeName] ? data[attributeName] : '';
+            // user attribute is not undefine then it can compare with newValue
+            // user attribute is undefine and newValue is not empty, then they can compare
+            if (newValue !== '' || user[attributeName]) {
+                if (user[attributeName] != newValue) {
+                    attributes.push({ "Name": attributeName, "Value": newValue });
+                    user[attributeName] = newValue;
+                }
             }
         })
 
-        if (user.email != data.email) {
+        // user attributes MFA related
+
+        // used for compare undefine, '', null all togther
+        let valueA = user.email ? user.email : '';
+        let valueB = data.email ? data.email : '';
+
+        if (valueA != valueB) {
             attributes.push({ "Name": 'email', "Value": data.email ? data.email : '' });
             user.email = data.email;
             if (data.email && email.trim().length > 0) {
@@ -134,7 +146,11 @@ export const putResData = async (data, cognitoISP) => {
                 user.email_verified = true;
             }
         }
-        if (user.phone_number != data.phone_number) {
+
+        valueA = user.phone_number ? user.phone_number : '';
+        valueB = data.phone_number ? data.phone_number : '';
+
+        if (valueA != valueB) {
             attributes.push({ "Name": 'phone_number', "Value": data.phone_number ? data.phone_number : '' });
             user.phone_number = data.phone_number;
             if (data.phone_number && data.phone_number.trim().length > 0) {
@@ -146,7 +162,10 @@ export const putResData = async (data, cognitoISP) => {
             newOtpValues.push(data.phone_number);
         }
 
-        if (user['alter-email'] != data['alter-email']) {
+        valueA = user['alter-email'] ? user['alter-email'] : ''
+        valueB = data['alter-email'] ? data['alter-email'] : ''
+
+        if (valueA != valueB) {
             attributes.push({ "Name": 'custom:alter-email', "Value": data['alter-email'] ? data['alter-email'] : '' });
             user['alter-email'] = data['alter-email'];
 
@@ -154,7 +173,10 @@ export const putResData = async (data, cognitoISP) => {
             newOtpValues.push(data['alter-email']);
         }
 
-        if (user['voice-number'] != data['voice-number']) {
+        valueA = user['voice-number'] ? user['voice-number'] : ''
+        valueB = data['voice-number'] ? data['voice-number'] : ''
+
+        if (valueA != valueB) {
             attributes.push({ "Name": 'custom:voice-number', "Value": data['voice-number'] ? data['voice-number'] : '' });
             user['voice-number'] = data['voice-number'];
 
