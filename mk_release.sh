@@ -21,11 +21,13 @@ cd ..
 cp -r $AMFA_FOLD $AMFA_FOLD"_release" >/dev/null 2>&1
 cd $AMFA_FOLD"_release"
 rm -rf cdk.out .git node_modules src public mk_release.sh config_bak.sh
-rm -rf cdk/lambda/serviceproviderslist/*.mjs
-rm -rf cdk/lambda/samlslist/*.mjs
-rm -rf cdk/lambda/smtpconfig/*.mjs
-rm -rf cdk/lambda/samls/*.mjs
-rm -rf cdk/lambda/samlslist/*.mjs
+rm -rf cdk/lambda/serviceproviderslist/*.mjs cdk/lambda/serviceproviderslist/dist/*.map
+rm -rf cdk/lambda/samlslist/*.mjs cdk/lambda/samlslist/dist/*.map
+rm -rf cdk/lambda/smtpconfig/*.mjs cdk/lambda/smtpconfig/dist/*.map
+rm -rf cdk/lambda/samls/*.mjs cdk/lambda/samls/dist/*.map
+rm -rf cdk/lambda/samlslist/*.mjs cdk/lambda/samlslist/dist/*.map
+rm -rf cdk/lambda/brandings/*.mjs cdk/lambda/brandings/dist/*.map
+rm -rf cdk/lambda/brandingslist/*.mjs cdk/lambda/brandingslist/dist/*.map
 
 git init >/dev/null 2>&1
 git add . >/dev/null 2>&1

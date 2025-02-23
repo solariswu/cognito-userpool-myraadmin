@@ -180,7 +180,7 @@ export class SSOApiGateway {
     }
 
     public createAdminApiEndpoints(userPoolId: string, samlClientId: string, samlClientSecrect: string,
-            spPortalClientId: string, userPoolDomain: string
+        spPortalClientId: string, userPoolDomain: string
     ) {
         const resourceTypes = ['users', 'groups', 'idps', 'appclients'];
 
@@ -291,6 +291,30 @@ export class SSOApiGateway {
             integration: new HttpLambdaIntegration(
                 'smtpconfig-integration',
                 smtplambda,
+            ),
+            authorizer: this.authorizor,
+        })
+
+        const brandingsLambda = this.createBrandingLambda('brandings');
+
+        this.api.addRoutes({
+            path: '/brandings/{id}',
+            methods: [HttpMethod.GET, HttpMethod.PUT],
+            integration: new HttpLambdaIntegration(
+                `brandings-integration`,
+                brandingsLambda,
+            ),
+            authorizer: this.authorizor,
+        })
+
+        const brandingslistLambda = this.createBrandingLambda('brandingslist');
+
+        this.api.addRoutes({
+            path: '/brandings',
+            methods: [HttpMethod.GET, HttpMethod.POST],
+            integration: new HttpLambdaIntegration(
+                `brandingslist-integration`,
+                brandingslistLambda,
             ),
             authorizer: this.authorizor,
         })
@@ -488,7 +512,7 @@ export class SSOApiGateway {
                 SAML_CLIENTID: samlClientId,
                 SAMLPROXY_METADATA_URL: samlproxy_metadata_url,
                 USER_POOL_ID: userPoolId,
-                ROOT_DOMAIN_NAME: process.env.ROOT_DOMAIN_NAME? process.env.ROOT_DOMAIN_NAME : '',
+                ROOT_DOMAIN_NAME: process.env.ROOT_DOMAIN_NAME ? process.env.ROOT_DOMAIN_NAME : '',
                 SP_PORTAL_CLIENT_ID: spPortalClientId,
                 END_USER_SP_OAUTH_DOMAIN: `https://${userPoolDomain}.auth.${this.region}.amazoncognito.com/`,
                 TENANT_ID: tenant_id ? tenant_id : 'unknowntid',
@@ -736,6 +760,42 @@ export class SSOApiGateway {
                         actions: [
                             'secretsmanager:GetSecretValue',
                             'secretsmanager:UpdateSecretValue'
+                        ],
+                    }),
+                ],
+            })
+        );
+
+        return lambda;
+    }
+
+    private createBrandingLambda(lambdaName: string) {
+
+        let lambda = new Function(this.scope, lambdaName, {
+            runtime: Runtime.NODEJS_20_X,
+            handler: 'index.handler',
+            code: Code.fromAsset(path.join(__dirname, `/../lambda/${lambdaName}/dist`)),
+            environment: {
+                TENANT_ID: tenant_id ? tenant_id : 'unknowntid',
+                SPPORTAL_BUCKETNAME: `${this.account}-amfa-${tenant_id}-login`,
+                ADMINPORTAL_BUCKETNAME: `${this.account}-${this.region}-adminportal-amfa-web`,
+            },
+            timeout: Duration.minutes(5)
+        });
+
+        lambda.role?.attachInlinePolicy(
+            new Policy(this.scope, `${lambdaName}-policy`, {
+                statements: [
+                    new PolicyStatement({
+                        //531680862493-amfa-amfa-dev220-login
+                        //531680862493-eu-west-1-adminportal-amfa-web
+                        resources: [
+                            `arn:aws:s3:::${this.account}-amfa-${tenant_id}-login/*`,
+                            `arn:aws:s3:::${this.account}-${this.region}-adminportal-amfa-web/*`,
+                        ],
+                        actions: [
+                            "s3:GetObject",
+                            "s3:PutObject"
                         ],
                     }),
                 ],

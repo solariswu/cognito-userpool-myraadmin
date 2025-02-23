@@ -11,8 +11,8 @@ import groups from "./applications";
 import appclients from "./appclients";
 import samls from "./samls";
 import UserImport from './users/UserImport';
-
 import tenants from "./tenants";
+import brandings from "./brandings";
 
 import authProvider from "./Component/authProvider/authProvider";
 import LoginPage from "./Component/authProvider/LoginPage";
@@ -73,6 +73,7 @@ export const App = () => (
       <Resource options={{ label: 'Service Providers' }} name="appclients" {...appclients} />"
       <Resource options={{ label: 'Service Providers' }} name="samls" {...samls} />"
       <Resource options={{ label: 'Settings' }} name="tenants" {...tenants} />"
+      <Resource options={{ label: 'Brandings'}} name="brandings" {...brandings} />"
       <CustomRoutes>
         <Route path="/user/import" element={<UserImport />} />
       </CustomRoutes>

@@ -64,6 +64,7 @@ export class AppStack extends Stack {
     }
 
     new CfnOutput(this, 'Admin Login Hosted UI URL', { value: `https://${props.hostedUIDomain}.auth.${props.env?.region}.amazoncognito.com` });
+    new CfnOutput(this, 'Sp Portal AppClientID', { value: userPool.enduserPortalClient.userPoolClientId})
 
     new CfnOutput(this, 'Application UserPoolID', { value: userPool.appUserPoolId });
 
