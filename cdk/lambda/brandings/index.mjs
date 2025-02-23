@@ -29,9 +29,14 @@ export const handler = async (event) => {
 
     const cognitoToken = event.headers.authorization;
 
+    const bucketList = {
+        "spportal": process.env.SPPORTAL_BUCKETNAME,
+        "adminportal": process.env.ADMINPORTAL_BUCKETNAME
+    }
+
     const getResData = async (type, s3) => {
         const params = {
-            Bucket: type === 'spportal' ? process.env.SPPORTAL_BUCKETNAME : process.env.ADMINPORTAL_BUCKETNAME,
+            Bucket: bucketList[type],
             Key: 'branding.json',
         };
         const data = await s3.send(new GetObjectCommand(params));
@@ -42,7 +47,7 @@ export const handler = async (event) => {
 
     const putResData = async (data, s3) => {
         const params = {
-            Bucket: data.type === 'spportal' ? process.env.SPPORTAL_BUCKETNAME : process.env.ADMINPORTAL_BUCKETNAME,
+            Bucket: bucketList[data.type],
             Key: 'branding.json',
             Body: JSON.stringify(data),
         };
