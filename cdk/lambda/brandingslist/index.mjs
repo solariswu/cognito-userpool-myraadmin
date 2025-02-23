@@ -22,7 +22,7 @@ export const handler = async (event) => {
         return JSON.parse(body);
     }
 
-    let promises, resData = []
+    let promises = [], resData = []
     types.map ((type) => promises.push(getResData(type, s3ISP)))
 
     const resultsArray = await Promise.allSettled (promises);

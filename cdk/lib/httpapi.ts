@@ -180,7 +180,7 @@ export class SSOApiGateway {
     }
 
     public createAdminApiEndpoints(userPoolId: string, samlClientId: string, samlClientSecrect: string,
-        spPortalClientId: string, userPoolDomain: string
+        spPortalClientId: string, userPoolDomain: string, distributionId: string,
     ) {
         const resourceTypes = ['users', 'groups', 'idps', 'appclients'];
 
@@ -295,7 +295,7 @@ export class SSOApiGateway {
             authorizer: this.authorizor,
         })
 
-        const brandingsLambda = this.createBrandingLambda('brandings');
+        const brandingsLambda = this.createBrandingLambda('brandings', distributionId);
 
         this.api.addRoutes({
             path: '/brandings/{id}',
@@ -307,7 +307,7 @@ export class SSOApiGateway {
             authorizer: this.authorizor,
         })
 
-        const brandingslistLambda = this.createBrandingLambda('brandingslist');
+        const brandingslistLambda = this.createBrandingLambda('brandingslist', '');
 
         this.api.addRoutes({
             path: '/brandings',
@@ -769,7 +769,7 @@ export class SSOApiGateway {
         return lambda;
     }
 
-    private createBrandingLambda(lambdaName: string) {
+    private createBrandingLambda(lambdaName: string, distributionId: string) {
 
         let lambda = new Function(this.scope, lambdaName, {
             runtime: Runtime.NODEJS_20_X,
@@ -779,6 +779,8 @@ export class SSOApiGateway {
                 TENANT_ID: tenant_id ? tenant_id : 'unknowntid',
                 SPPORTAL_BUCKETNAME: `${this.account}-amfa-${tenant_id}-login`,
                 ADMINPORTAL_BUCKETNAME: `${this.account}-${this.region}-adminportal-amfa-web`,
+                SPPORTAL_DISTRIBUTION_ID: process.env.SPPORTAL_DISTRIBUTION_ID ? process.env.SPPORTAL_DISTRIBUTION_ID : '',
+                ADMINPORTAL_DISTRIBUTION_ID: distributionId ? distributionId : '',
             },
             timeout: Duration.minutes(5)
         });
@@ -796,6 +798,15 @@ export class SSOApiGateway {
                         actions: [
                             "s3:GetObject",
                             "s3:PutObject"
+                        ],
+                    }),
+                    new PolicyStatement({
+                        resources: [
+                            `arn:aws:cloudfront::${this.account}:distribution/${process.env.SPPORTAL_DISTRIBUTION_ID ? process.env.SPPORTAL_DISTRIBUTION_ID : '*'}`,
+                            `arn:aws:cloudfront::${this.account}:distribution/${process.env.ADMINPORTAL_DISTRIBUTION_ID ? process.env.ADMINPORTAL_DISTRIBUTION_ID : '*'}`,
+                        ],
+                        actions: [
+                            'cloudfront:CreateInvalidation',
                         ],
                     }),
                 ],

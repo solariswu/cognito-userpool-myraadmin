@@ -1,7 +1,9 @@
 
 import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
+import { CloudFrontClient, CreateInvalidationCommand } from '@aws-sdk/client-cloudfront'
 
 const s3ISP = new S3Client({ region: process.env.AWS_REGION });
+const cloudFront = new CloudFrontClient({ region: process.env.AWS_REGION });
 
 export const handler = async (event) => {
 
@@ -34,9 +36,14 @@ export const handler = async (event) => {
         "adminportal": process.env.ADMINPORTAL_BUCKETNAME
     }
 
-    const getResData = async (type, s3) => {
+    const distributionList = {
+        "spportal": process.env.SPPORTAL_DISTRIBUTION_ID,
+        "adminportal": process.env.ADMINPORTAL_DISTRIBUTION_ID
+    }
+
+    const getResData = async (id, s3) => {
         const params = {
-            Bucket: bucketList[type],
+            Bucket: bucketList[id],
             Key: 'branding.json',
         };
         const data = await s3.send(new GetObjectCommand(params));
@@ -45,13 +52,27 @@ export const handler = async (event) => {
         return JSON.parse(body);
     }
 
-    const putResData = async (data, s3) => {
+    const putResData = async (data, s3, cloudFront) => {
         const params = {
-            Bucket: bucketList[data.type],
+            Bucket: bucketList[data.id],
             Key: 'branding.json',
             Body: JSON.stringify(data),
         };
         await s3.send(new PutObjectCommand(params));
+
+        await cloudFront.send(new CreateInvalidationCommand({
+            DistributionId: distributionList[data.id],
+            InvalidationBatch: {
+                CallerReference: Date.now().toString(),
+                Paths: {
+                    Quantity: 1,
+                    Items: [
+                        '/branding.json'
+                    ]
+                }
+            }
+        }));
+
         return data;
     }
 
@@ -62,7 +83,7 @@ export const handler = async (event) => {
                 return response(200, JSON.stringify({ data: getResult }));
             case 'PUT':
 				const payload = JSON.parse(event.body);
-				const putResult = await putResData(payload.data);
+				const putResult = await putResData(payload.data, s3ISP);
 				return response(200, JSON.stringify({ data: putResult }));
             case 'OPTIONS':
                 return response(200, JSON.stringify({ data: 'ok' }));
