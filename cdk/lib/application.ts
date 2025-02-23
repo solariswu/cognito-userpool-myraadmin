@@ -42,8 +42,7 @@ export class AppStack extends Stack {
     // enable admin api endpoints
     apigateway.createAdminApiEndpoints(userPool.appUserPoolId, userPool.samlClient.userPoolClientId,
       userPool.samlClient.userPoolClientSecret.unsafeUnwrap(),
-      userPool.enduserPortalClient.userPoolClientId, props.hostedUIDomain ? props.hostedUIDomain : '',
-      webapp.distribution.distributionId
+      userPool.enduserPortalClient.userPoolClientId, props.hostedUIDomain ? props.hostedUIDomain : ''
     );
     apigateway.createEndUserPortalApiEndpoints(userPool.appUserPoolId);
 

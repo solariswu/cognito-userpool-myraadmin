@@ -18,7 +18,7 @@ check_release_folder() {
 
 build_project() {
     echo 'Making release... wait'
-    npm install
+    npm install --legacy-peer-deps
     npm run build
     npm run lambda-build
     rm -rf node_modules

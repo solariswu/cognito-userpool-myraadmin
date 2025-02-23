@@ -180,7 +180,7 @@ export class SSOApiGateway {
     }
 
     public createAdminApiEndpoints(userPoolId: string, samlClientId: string, samlClientSecrect: string,
-        spPortalClientId: string, userPoolDomain: string, distributionId: string,
+        spPortalClientId: string, userPoolDomain: string
     ) {
         const resourceTypes = ['users', 'groups', 'idps', 'appclients'];
 
@@ -295,7 +295,7 @@ export class SSOApiGateway {
             authorizer: this.authorizor,
         })
 
-        const brandingsLambda = this.createBrandingLambda('brandings', distributionId);
+        const brandingsLambda = this.createBrandingLambda('brandings');
 
         this.api.addRoutes({
             path: '/brandings/{id}',
@@ -307,7 +307,7 @@ export class SSOApiGateway {
             authorizer: this.authorizor,
         })
 
-        const brandingslistLambda = this.createBrandingLambda('brandingslist', '');
+        const brandingslistLambda = this.createBrandingLambda('brandingslist');
 
         this.api.addRoutes({
             path: '/brandings',
@@ -769,7 +769,7 @@ export class SSOApiGateway {
         return lambda;
     }
 
-    private createBrandingLambda(lambdaName: string, distributionId: string) {
+    private createBrandingLambda(lambdaName: string) {
 
         let lambda = new Function(this.scope, lambdaName, {
             runtime: Runtime.NODEJS_20_X,
@@ -780,7 +780,7 @@ export class SSOApiGateway {
                 SPPORTAL_BUCKETNAME: `${this.account}-amfa-${tenant_id}-login`,
                 ADMINPORTAL_BUCKETNAME: `${this.account}-${this.region}-adminportal-amfa-web`,
                 SPPORTAL_DISTRIBUTION_ID: process.env.SPPORTAL_DISTRIBUTION_ID ? process.env.SPPORTAL_DISTRIBUTION_ID : '',
-                ADMINPORTAL_DISTRIBUTION_ID: distributionId ? distributionId : '',
+                ADMINPORTAL_DISTRIBUTION_ID: process.env.SPPORTAL_DISTRIBUTION_ID ? process.env.SPPORTAL_DISTRIBUTION_ID : '',
             },
             timeout: Duration.minutes(5)
         });
@@ -789,11 +789,9 @@ export class SSOApiGateway {
             new Policy(this.scope, `${lambdaName}-policy`, {
                 statements: [
                     new PolicyStatement({
-                        //531680862493-amfa-amfa-dev220-login
-                        //531680862493-eu-west-1-adminportal-amfa-web
                         resources: [
                             `arn:aws:s3:::${this.account}-amfa-${tenant_id}-login/*`,
-                            `arn:aws:s3:::${this.account}-${this.region}-adminportal-amfa-web/*`,
+                            `arn:aws:s3:::${this.account}-amfa-${tenant_id}-amfa/*`,
                         ],
                         actions: [
                             "s3:GetObject",
