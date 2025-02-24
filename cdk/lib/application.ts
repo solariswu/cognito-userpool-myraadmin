@@ -7,7 +7,7 @@ import { WebApplication } from './webapp';
 
 import { SSOApiGateway } from './httpapi';
 import { SSOUserPool } from './userpool';
-import { app_userpool_info } from "../config";
+import { app_userpool_info, hostedUI_domain_prefix } from "../config";
 import { createPostDeploymentLambda } from "./postDeployment";
 
 
@@ -64,7 +64,15 @@ export class AppStack extends Stack {
       new CfnOutput(this, 'Hosted UI AppClientID', { value: userPool.hostedUIClient.userPoolClientId });
     }
 
-    new CfnOutput(this, 'Admin Login Hosted UI URL', { value: `https://${props.hostedUIDomain}.auth.${props.env?.region}.amazoncognito.com` });
+    const str = hostedUI_domain_prefix?.replace(/\./g, '').toLowerCase() + this.region + this.account;
+    let hash = 0
+    if (str) {
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
+      }
+    }
+
+    new CfnOutput(this, 'Admin Login Hosted UI URL', { value: `https://${hostedUI_domain_prefix}-${(hash >>> 0).toString(36)}.auth.${props.env?.region}.amazoncognito.com` });
     new CfnOutput(this, 'Sp Portal AppClientID', { value: userPool.enduserPortalClient.userPoolClientId})
 
     new CfnOutput(this, 'Application UserPoolID', { value: userPool.appUserPoolId });
