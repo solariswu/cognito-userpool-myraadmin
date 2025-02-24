@@ -40,7 +40,7 @@ export class SSOUserPool {
     this.scope = scope;
     this.account = props.env?.account;
     this.region = props.env?.region;
-    this.domainName = props.domainName ? props.domainName: '';
+    this.domainName = props.domainName ? props.domainName : '';
 
     this.adminUserpool = this.createUserPool('Admin');
     this.adminClient = this.addAdminClient();
@@ -102,9 +102,17 @@ export class SSOUserPool {
   }
 
   private addAdminClient() {
+    const str = hostedUI_domain_prefix?.replace(/\./g, '').toLowerCase() + this.region + this.account;
+    let hash = 0
+    if (str) {
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
+      }
+    }
+
     this.adminUserpool.addDomain('adminHostedUI-domain', {
       cognitoDomain: {
-        domainPrefix: hostedUI_domain_prefix,
+        domainPrefix: `${hostedUI_domain_prefix}-${(hash >>> 0).toString(36)}`,
       },
     });
 
