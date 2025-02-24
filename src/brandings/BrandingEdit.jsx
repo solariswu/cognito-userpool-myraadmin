@@ -33,10 +33,14 @@ export const BrandingEdit = () => {
         >
           <FunctionField
             render={(record) => (
-              <Typography variant="h4">{record.name} Branding</Typography>
+              <Box>
+                <Typography variant="h4">{record.name} Branding</Typography>
+                <a href={record.url} rel="noreferrer" target="_blank" >{record.url}</a>
+              </Box>
             )}
           />
         </Box>
+        <div style={{ height: "2em" }} />
         <TextInput
           label="Title Message"
           source="app_title_msg"
@@ -179,7 +183,7 @@ export const BrandingEdit = () => {
                 )}
               </FormDataConsumer>
             </Box>
-          </Grid> 
+          </Grid>
         </Grid>
 
         <div style={{ height: "2em" }} />
