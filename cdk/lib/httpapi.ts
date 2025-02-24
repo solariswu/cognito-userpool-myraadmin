@@ -781,6 +781,7 @@ export class SSOApiGateway {
                 ADMINPORTAL_BUCKETNAME: `${this.account}-${this.region}-adminportal-amfa-web`,
                 SPPORTAL_DISTRIBUTION_ID: process.env.SPPORTAL_DISTRIBUTION_ID ? process.env.SPPORTAL_DISTRIBUTION_ID : '',
                 ADMINPORTAL_DISTRIBUTION_ID: process.env.SPPORTAL_DISTRIBUTION_ID ? process.env.SPPORTAL_DISTRIBUTION_ID : '',
+                ROOT_DOMAIN_NAME: process.env.ROOT_DOMAIN_NAME ? process.env.ROOT_DOMAIN_NAME : '',
             },
             timeout: Duration.minutes(5)
         });
