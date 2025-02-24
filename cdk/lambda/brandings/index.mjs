@@ -83,7 +83,7 @@ export const handler = async (event) => {
                 return response(200, JSON.stringify({ data: getResult }));
             case 'PUT':
 				const payload = JSON.parse(event.body);
-				const putResult = await putResData(payload.data, s3ISP);
+				const putResult = await putResData(payload.data, s3ISP, cloudFront);
 				return response(200, JSON.stringify({ data: putResult }));
             case 'OPTIONS':
                 return response(200, JSON.stringify({ data: 'ok' }));
