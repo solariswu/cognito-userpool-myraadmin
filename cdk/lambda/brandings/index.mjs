@@ -80,7 +80,8 @@ export const handler = async (event) => {
         switch (event.requestContext.http.method) {
             case 'GET':
                 const getResult = await getResData(event.pathParameters?.id, s3ISP);
-                return response(200, JSON.stringify({ data: getResult }));
+                return response(200, JSON.stringify({ data: {url: 'https://login.' + process.env.TENANT_ID + '.' + process.env.ROOT_DOMAIN_NAME,
+                ...getResult }}));
             case 'PUT':
 				const payload = JSON.parse(event.body);
 				const putResult = await putResData(payload.data, s3ISP, cloudFront);
