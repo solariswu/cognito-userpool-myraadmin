@@ -29,7 +29,7 @@ export const handler = async (event) => {
 
     resultsArray.map ((result) => {
         if (result.status === 'fulfilled') {
-            resData.push({url: 'https://login.' + process.env.TENANT_ID + '.' + process.env.ROOT_DOMAIN_NAME, ...result.value})
+            resData.push({url: process.env.SP_PORTAL_URL, ...result.value})
         }
     })
 
