@@ -143,7 +143,7 @@ const UserImport = () => {
   };
 
   const handleMyImport = async () => {
-    const notify = document.getElementById("notify").checked;
+    const notify = checked;
     const errorMsg = [];
     let success = 0;
     const pause = () => {
