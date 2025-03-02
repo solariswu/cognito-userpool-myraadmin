@@ -309,7 +309,7 @@ export const TenantEdit = () => {
                     onClick={() =>
                       handleClick(
                         record.url.replace("https://", "https://api.") +
-                          "/totptoken",
+                        "/totptoken",
                       )
                     }
                     size="small"
@@ -344,7 +344,7 @@ export const TenantEdit = () => {
             <DispCardItem
               title={"Tenant Name"}
               source={"name"}
-              showCopy={record.name}
+              showCopy={decodeURIComponent(record.name)}
             />
           )}
         />
@@ -448,7 +448,13 @@ export const TenantEdit = () => {
                   alignItems: "center",
                 }}
               >
-                <TextField source="name" variant="h4" />
+                <FunctionField
+                  render={(record) => (
+                      <Typography variant="h4">
+                        {decodeURIComponent(record.name)}
+                      </Typography>
+                  )}
+                />
               </Box>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={6} lg={5}>

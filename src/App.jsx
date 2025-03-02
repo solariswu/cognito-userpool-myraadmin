@@ -86,6 +86,6 @@ export const App = () => (
       textAlign: 'center',
       color: "grey",
       fontSize: "11px",
-    }}>Copyright &copy; 2023-2024 aPersona Inc. v1.0</div>
+    }}>Copyright &copy; 2025 aPersona Inc. v1.0</div>
   </>
 );
