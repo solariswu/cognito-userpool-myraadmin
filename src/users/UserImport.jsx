@@ -320,10 +320,11 @@ const UserImport = () => {
             <br />
             <div>
               <a
-                href="./example.csv"
+                href="https://downloads.apersona.com/aws-svcs/example.csv"
                 download="example.csv"
                 title="example import csv"
                 target="_blank"
+                rel="noreferrer"
               >
                 Example Import CSV file
               </a>
