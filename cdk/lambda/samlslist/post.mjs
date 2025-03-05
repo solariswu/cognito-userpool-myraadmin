@@ -111,7 +111,7 @@ export const postResData = async (payload, samlurl, dynamodbISP, cognitoISP, cog
             if (response.status === 409) {
                 return {
                     statusCode: 409,
-                    body: JSON.stringify({ data: 'SP already exists on saml proxy server' }),
+                    body: JSON.stringify({ data: 'SP already registered on saml proxy server' }),
                 }
             }
 
