@@ -195,7 +195,13 @@ const dataProvider = {
                     throw new Error(json.message)
                 }
                 else {
-                    return ({ data: json.data })
+                    if (json.data && json.data.statusCode && json.data.statusCode === 409) {
+                        const body = JSON.parse(json.data.body)
+                        throw new Error(body?.data)
+                    }
+                    else {
+                        return ({ data: json.data })
+                    }
                 }
             })
     }

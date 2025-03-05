@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { Typography } from '@mui/material';
-import { BooleanInput, Button, Confirm, Create, FileField, FileInput, RadioButtonGroupInput, SaveButton, SimpleForm, TextInput, Toolbar, useCreate, useRedirect } from 'react-admin';
+import { BooleanInput, Button, Confirm, Create, FileField, FileInput, RadioButtonGroupInput, SaveButton, SimpleForm, TextInput, Toolbar, useCreate, useNotify, useRedirect } from 'react-admin';
 
 import { validateUrl } from '../utils/validation';
 // import { useWatch } from "react-hook-form";
@@ -28,10 +28,14 @@ const SamlCreateToolbar = () => {
 };
 
 export const SamlCreate = () => {
+    const notify = useNotify();
 
     const [create, { isLoading }] = useCreate(undefined, undefined, {
         onSettled: (data, error) => {
-            console.log('create data', data)
+
+            if (error) {
+                notify(error.message, { type: 'error' });
+            }
             if (!data.entityId && data.metadataType === 'isFile') {
                 create('samls', { data })
                 redirect('/appclients?t=1')
@@ -64,7 +68,8 @@ export const SamlCreate = () => {
 
         if (data.metadataType === 'isUrl' && data.metadataUrl && data.metadataUrl.trim().length) {
             data.metadataUrl = data.metadataUrl.trim()
-            await create('samls', { data })
+            const res = await create('samls', { data })
+            console.log('spmetadatas create res', res);
             redirect('/appclients#=1')
         }
         else if (data.metadataType === 'isFile' && data.metadataFile) {

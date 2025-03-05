@@ -108,6 +108,20 @@ export const postResData = async (payload, samlurl, dynamodbISP, cognitoISP, cog
             });
             console.log('samlslist post result', response);
 
+            if (response.status === 409) {
+                return {
+                    statusCode: 409,
+                    body: JSON.stringify({ data: 'SP already exists on saml proxy server' }),
+                }
+            }
+
+            if (response.status !== 200) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ data: 'SP creation error' }),
+                }
+            }
+
             const res = await fetch(samlReloadUrl, {
                 method: "GET", // *GET, POST, PUT, DELETE, etc.
                 cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
