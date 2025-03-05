@@ -51,7 +51,7 @@ export const handler = async (event) => {
                 resData = data.Items.map(item => {
                     return {
                         id: item.id.S,
-                        name: item.name.S,
+                        name: decodeURIComponent(item.name.S),
                         contact: item.contact.S,
                         url: item.url.S,
                         endUserSpUrl: item.endUserSpUrl.S,

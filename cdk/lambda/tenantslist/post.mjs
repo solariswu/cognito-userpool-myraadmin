@@ -36,7 +36,7 @@ export const postResData = async (payload, dynamodb) => {
 
 		return {
 			id: item.id,
-			name: item.name,
+			name: decodeURIComponent(item.name),
 			contact: item.contact,
 			samlproxy: item.samlproxy,
 			url: item.url,
