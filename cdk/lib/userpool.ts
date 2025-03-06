@@ -57,7 +57,7 @@ export class SSOUserPool {
 
   private createUserPool = (type: string) => {
     return new UserPool(this.scope, `SSO-${type}-userpool}`, {
-      userPoolName: `SSO-${type}-UserPool`,
+      userPoolName: `aPersona-AWS-Identity-SSO-${type}-UserPool`,
       // use self sign-in is disable by default
       selfSignUpEnabled: false,
       signInAliases: {
