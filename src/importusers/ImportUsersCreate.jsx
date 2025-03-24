@@ -17,20 +17,21 @@ import {
   Switch,
   Typography,
 } from "@mui/material";
-import { UserImportList } from "./UserImportList";
 import awsmobile from "../aws-export";
 import Papa from "papaparse";
+import { UserImportList } from "./UserImportList";
 
 const apiUrl = awsmobile.aws_backend_api_url;
 
 const importUserMaxAmount = 5000;
 
-const UserImport = () => {
+export const ImportUsersCreate = () => {
   const [userData, setUserData] = useState([]);
   const [errorLog, setErrorLog] = useState([]);
   const [result, setResult] = useState([0, 0, 0]);
   const [importState, setImportState] = useState("init");
   const [checked, setChecked] = useState(true);
+  const [csvFile, setCsvFile] = useState(null);
   const redirect = useRedirect();
   const handleClick = () => redirect("/users");
 
@@ -38,6 +39,7 @@ const UserImport = () => {
     setImportState("init");
 
     if (file && file.csvFile) {
+      setCsvFile(file);
       setImportState("parsing");
 
       let count = 0;
@@ -142,6 +144,78 @@ const UserImport = () => {
     }
   };
 
+  const uploadToS3 = async (data) => {
+    const url = data.s3SignedUrl;
+    const rawFile = csvFile.csvFile.rawFile;
+    const fileBuffer = await rawFile.arrayBuffer();
+    //  const fileBuffer = csvFile.csvFile.rawFile;
+    const resp = await fetch(url, {
+      method: "PUT",
+      body: fileBuffer,
+      headers: {
+        'Content-Type': 'text/csv',
+        'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+        'Access-Control-Allow-Credentials': true, // Required for cookies, authorization headers with HTTPS
+        'x-amz-server-side-encryption': 'aws:kms'
+      },
+    })
+    console.log(resp)
+    return resp;
+  }
+
+  const handleImportCsv = async () => {
+
+    if (csvFile && csvFile.csvFile?.rawFile) {
+      console.log('Creating Import job');
+      const impUrl = `${apiUrl}/importusers`;
+
+      try {
+
+        const getS3SignedUrlResp = await fetch(impUrl, {
+          method: "POST",
+          body: JSON.stringify({ action: "getS3SignedUrl" }),
+          headers: {
+            Authorization: localStorage.getItem("token"),
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
+        })
+
+        if (getS3SignedUrlResp.status === 200) {
+          const resp = await getS3SignedUrlResp.json();
+
+          console.log('getS3SignedUrlResp', resp)
+          if (resp.s3SignedUrl && resp.job_id) {
+            // Make an HTTP POST request to the presigned URL.
+            const response = await uploadToS3(resp);
+            const job_id = resp.job_id;
+
+            console.log(`File uploaded successfully with status ${response.status}`);
+
+            fetch(impUrl, {
+              method: "POST",
+              body: JSON.stringify({ action: "startimportjob", job_id }),
+              headers: {
+                Authorization: localStorage.getItem("token"),
+                "Content-Type": "application/json",
+                Accept: "application/json"
+              },
+            }).then(startImportResp => {
+              console.log('startImportResp', startImportResp)
+              setImportState("importing");
+              setResult([0, 0, userData.length]);
+              setUserData([]);
+              setCsvFile(null);
+            })
+          }
+        }
+      }
+      catch (error) {
+        console.log('error', error)
+      }
+    }
+  }
+
   const handleMyImport = async () => {
     const notify = checked;
     const errorMsg = [];
@@ -216,7 +290,7 @@ const UserImport = () => {
   const ImportButton = () => (
     <Button
       label="Import"
-      onClick={handleMyImport}
+      onClick={handleImportCsv}
       variant="contained"
       color="primary"
       startIcon={null}
@@ -229,44 +303,45 @@ const UserImport = () => {
       style={{ margin: "20px", padding: "0px 20px 20px 20px", minHeight: "x" }}
     >
       <CssBaseline />
-        <h1> Import Users</h1>
-        <h3> {importUserMaxAmount} users per import maximum</h3>
-        {importState === "csvValid" && (
-          <SimpleForm
-            toolbar={
-              <>
-                <ImportButton />
-                <Button
-                  label="Cancel"
-                  onClick={() => {
-                    setUserData([]);
-                    setImportState("init");
-                  }}
-                  color="primary"
-                  startIcon={<></>}
-                />
-              </>
-            }
-          >
-            <UserImportList data={userData} />
-            <br />
-            <br />
-            <FormGroup>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={checked}
-                    id="notify"
-                    onChange={(e) => setChecked(e.target.checked)}
-                  />
-                }
-                label="Send an invitation email to user now"
+      <h1> Import Users</h1>
+      <h3> {importUserMaxAmount} users per import maximum</h3>
+      {importState === "csvValid" && (
+        <SimpleForm
+          toolbar={
+            <>
+              <ImportButton />
+              <Button
+                label="Cancel"
+                onClick={() => {
+                  setUserData([]);
+                  setImportState("init");
+                }}
+                color="primary"
+                startIcon={<></>}
               />
-            </FormGroup>
-            <br />
-          </SimpleForm>
-        )}
-        {(importState === "importing" || importState === "parsing") && (
+            </>
+          }
+        >
+          <UserImportList data={userData} />
+          <br />
+          <br />
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={checked}
+                  id="notify"
+                  onChange={(e) => setChecked(e.target.checked)}
+                />
+              }
+              label="Send an invitation email to user now"
+            />
+          </FormGroup>
+          <br />
+        </SimpleForm>
+      )}
+      {
+        (importState === "importing" || importState === "parsing") && (
           <>
             <CircularProgress sx={{ marginRight: 1 }} size={18} thickness={2} />
             <Typography variant="body2">
@@ -280,8 +355,10 @@ const UserImport = () => {
               </Typography>
             )}
           </>
-        )}
-        {importState === "importDone" && (
+        )
+      }
+      {
+        importState === "importDone" && (
           <>
             <h3> {`${result[0]} of ${result[2]} Users Imported`} </h3>
             {errorLog.length > 0 && <h4> Issues </h4>}
@@ -303,8 +380,10 @@ const UserImport = () => {
               startIcon={<></>}
             />
           </>
-        )}
-        {importState === "init" && (
+        )
+      }
+      {
+        importState === "init" && (
           <SimpleForm
             onSubmit={updateloadCSV}
             toolbar={<SaveButton label="Load Data" icon={<></>} />}
@@ -330,9 +409,8 @@ const UserImport = () => {
               </a>
             </div>
           </SimpleForm>
-        )}
-    </Paper>
+        )
+      }
+    </Paper >
   );
 };
-
-export default UserImport;

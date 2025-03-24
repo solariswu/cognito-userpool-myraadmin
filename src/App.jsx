@@ -10,7 +10,7 @@ import users from './users';
 import groups from "./applications";
 import appclients from "./appclients";
 import samls from "./samls";
-import UserImport from './users/UserImport';
+import importuser from './importusers';
 import tenants from "./tenants";
 import brandings from "./brandings";
 
@@ -70,13 +70,14 @@ export const App = () => (
       >
       <Resource name="users" {...users} />"
       <Resource options={{ label: 'User Groups' }} name="groups" {...groups} />"
+      <Resource options={{ label: 'User Import' }} name="importusers" {...importuser} />"
       <Resource options={{ label: 'Service Providers' }} name="appclients" {...appclients} />"
       <Resource options={{ label: 'Service Providers' }} name="samls" {...samls} />"
       <Resource options={{ label: 'Settings' }} name="tenants" {...tenants} />"
       <Resource options={{ label: 'Brandings'}} name="brandings" {...brandings} />"
-      <CustomRoutes>
+      {/* <CustomRoutes>
         <Route path="/user/import" element={<UserImport />} />
-      </CustomRoutes>
+      </CustomRoutes> */}
     </Admin>
     </BrowserRouter>
     <div style={{
