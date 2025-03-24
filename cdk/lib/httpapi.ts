@@ -1,6 +1,6 @@
 
 import { Function, Code, Runtime } from 'aws-cdk-lib/aws-lambda';
-import { Effect, ManagedPolicy, Policy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as path from 'path';
 
@@ -23,7 +23,6 @@ import { AMFACONFIG_TABLE, AMFATENANT_TABLE, current_stage, project_name, servic
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
-import { stat } from 'fs';
 
 
 export class SSOApiGateway {
@@ -183,34 +182,13 @@ export class SSOApiGateway {
     public createAdminApiEndpoints(userPoolId: string, samlClientId: string, samlClientSecrect: string,
         spPortalClientId: string, userPoolDomain: string
     ) {
-        const resourceTypes = ['users', 'groups', 'idps', 'appclients', 'importusers'];
-
-        const userImportCWRole = new Role(this.scope, 'ImportUserJobCloudWatchRole', {
-            assumedBy: new ServicePrincipal('cognito-idp.amazonaws.com'),
-          });
-
-        userImportCWRole.addToPolicy(
-            new PolicyStatement({
-                effect: Effect.ALLOW,
-                resources: [
-                    `arn:aws:logs:${this.region}:${this.account}:log-group:/aws/cognito/*`
-                ],
-                actions: [
-                    "logs:CreateLogGroup",
-                    "logs:CreateLogStream",
-                    "logs:DescribeLogStreams",
-                    "logs:PutLogEvents"
-                ],
-            })
-        )
+        const resourceTypes = ['users', 'groups', 'idps', 'appclients'];
 
         resourceTypes.forEach(resourceType => {
             const lambdaList = this.createLambda(
                 `${resourceType}list`,
                 userPoolId,
                 this.getPolicyStatements(this.userPoolIdToArn(userPoolId), resourceType, true),
-                userImportCWRole.roleArn
-
             );
             // 👇 add route for GET /resource
             this.api.addRoutes({
@@ -225,8 +203,7 @@ export class SSOApiGateway {
             const lambda = this.createLambda(
                 `${resourceType}`,
                 userPoolId,
-                this.getPolicyStatements(this.userPoolIdToArn(userPoolId), resourceType, false),
-                userImportCWRole.roleArn
+                this.getPolicyStatements(this.userPoolIdToArn(userPoolId), resourceType, false)
             );
             // 👇 add route for CRUD /resource/id
             this.api.addRoutes({
@@ -708,17 +685,6 @@ export class SSOApiGateway {
             samls: {
                 normal: [],
                 list: []
-            },
-            importusers: {
-                normal: [
-                    'cognito-idp:DecribeUserImportJob',
-                    'cognito-idp:StopUserImportJob',
-                ],
-                list: [
-                    'cognito-idp:ListUserImportJobs',
-                    'cognito-idp:CreateUserImportJob',
-                    'cognito-idp:StartUserImportJob',
-                ]
             }
         };
 
@@ -748,21 +714,10 @@ export class SSOApiGateway {
             );
         }
 
-        if (resourceType === 'importusers' && isList) {
-            // add iam passrole permission
-            statements.push(
-                new PolicyStatement({
-                    resources: ['*'],
-                    actions: ['iam:PassRole'],
-                })
-            )
-        }
-
         return statements;
     }
 
-    private createLambda(lambdaName: string, userPoolId: string, statements: PolicyStatement[], roleArn: string ) {
-
+    private createLambda(lambdaName: string, userPoolId: string, statements: PolicyStatement[]) {
         const lambda = new Function(this.scope, lambdaName, {
             runtime: Runtime.NODEJS_20_X,
             handler: 'index.handler',
@@ -772,7 +727,6 @@ export class SSOApiGateway {
                 USERPOOL_DOMAINNAME: this.hostedUIDomain,
                 AMFA_BASE_URL: this.amfaBaseUrl,
                 AMFA_SPINFO_TABLE: this.spinfoTable.tableName,
-                CW_IAM_ROLE: roleArn,
             },
             timeout: Duration.minutes(5)
         });
