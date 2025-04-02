@@ -39,8 +39,6 @@ export const ImportUsersShow = () => {
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
-    console.log('record', record);
-
     if (! record.FailureDetails) {
       return <></>
     }
@@ -55,8 +53,6 @@ export const ImportUsersShow = () => {
       reason2: index < secondHalf.length ? secondHalf[index].reason : null,
       id: index,
     }))
-
-    console.log(secondHalf)
 
     const visibleRows = React.useMemo(
       () =>
