@@ -107,7 +107,7 @@ export const UserList = (props) => {
   const ListActions = () => {
     const redirect = useRedirect();
     const handleClick = () => {
-      redirect("/user/import");
+      redirect("/importusers/create");
     };
 
     return (

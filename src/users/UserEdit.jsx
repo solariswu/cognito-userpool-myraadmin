@@ -1,9 +1,7 @@
 import { AccountCircle } from "@mui/icons-material";
 import {
   Avatar,
-  Box,
   Container,
-  Divider,
   Grid,
   List,
   ListItem,

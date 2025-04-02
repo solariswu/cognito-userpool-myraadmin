@@ -6,6 +6,7 @@ import {
   Button,
   SaveButton,
   useRedirect,
+  useGetIdentity,
 } from "react-admin";
 import {
   CircularProgress,
@@ -17,24 +18,25 @@ import {
   Switch,
   Typography,
 } from "@mui/material";
-import { UserImportList } from "./UserImportList";
 import awsmobile from "../aws-export";
 import Papa from "papaparse";
+import { UserImportListWidget } from "./UserImportListWidget";
 
 const apiUrl = awsmobile.aws_backend_api_url;
 
 const importUserMaxAmount = 5000;
 
-const UserImport = () => {
+export const ImportUsersCreate = () => {
   const [userData, setUserData] = useState([]);
-  const [errorLog, setErrorLog] = useState([]);
-  const [result, setResult] = useState([0, 0, 0]);
+  const [jobId, setJobId] = useState('');
   const [importState, setImportState] = useState("init");
   const [checked, setChecked] = useState(true);
   const redirect = useRedirect();
-  const handleClick = () => redirect("/users");
+  const { data: adminProfile } = useGetIdentity();
 
-  const updateloadCSV = (file) => {
+  const handleClick = () => redirect("/importusers");
+
+  const parseCSVToUserData = (file) => {
     setImportState("init");
 
     if (file && file.csvFile) {
@@ -142,44 +144,49 @@ const UserImport = () => {
     }
   };
 
-  const handleMyImport = async () => {
-    const notify = checked;
+  const mailformatRegex = /^\b[A-Z0-9._+%-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b$/i;
+  const dateFormatRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+  const filterData = async (item) =>
+    item.email &&
+    item.email !== "" &&
+    item.email.match(mailformatRegex) &&
+    item.given_name &&
+    item.given_name !== "" &&
+    item.family_name &&
+    item.family_name !== "" &&
+    (!item.phone_number ||
+      item.phone_number === "" ||
+      item.phone_number[0] === "+") &&
+    (!item["alter-email"] ||
+      item["alter-email"] === "" ||
+      item["alter-email"].match(mailformatRegex)) &&
+    (!item["voice-number"] ||
+      item["voice-number"] === "" ||
+      item["voice-number"][0] === "+") &&
+    (!item.gender ||
+      !item.gender.length ||
+      ["male", "female", "other"].includes(item.gender)) &&
+    (!item.birthdate ||
+      !item.birthdate.length ||
+      dateFormatRegex.test(item.birthdate))
+
+  const submitUserData = async () => {
+
     const errorMsg = [];
-    let success = 0;
-    const pause = () => {
-      return new Promise((r) => setTimeout(r, 0));
-    };
 
     setImportState("importing");
-    setResult([0, 0, userData.length]);
 
-    for (let i = 0; i < userData.length; i++) {
-      const user = userData[i];
-      const { groups, email, phone_number, given_name, family_name, ...rest } =
-        user;
+    const url = `${apiUrl}/importusers`;
 
-      const params = {
-        groups,
-        email,
-        phone_number,
-        given_name,
-        family_name,
-        notify,
-        ...rest,
-      };
+    const filteredData = userData.filter((item) => filterData(item));
 
-      const url = `${apiUrl}/users`;
-
-      // pause for UI update
-      if (i % 5 === 0) {
-        setResult([success, i + 1, userData.length]);
-        await pause();
-      }
+    if (filteredData.length > 0) {
 
       try {
         const res = await fetch(url, {
           method: "POST",
-          body: JSON.stringify({ data: params }),
+          body: JSON.stringify({ userData: filteredData, admin: adminProfile?.email, notify: checked }),
           headers: {
             Authorization: localStorage.getItem("token"),
             "Content-Type": "application/json",
@@ -187,36 +194,34 @@ const UserImport = () => {
           },
         });
         const json = await res.json();
+        console.log('import done json', json);
         if (
           res.status !== 200 ||
           json.type === "exception" ||
           json.type === "Error"
         ) {
           console.log("errorMsg", errorMsg);
-          errorMsg.push(`${email} - ${json.message}`);
-          throw new Error(`${email} - ${json.message}`);
-        } else {
-          success += 1;
-          setResult([success, i + 1, userData.length]);
-          console.log("imported data", json.data);
+          setImportState("importDone");
+        }
+        else {
+          setJobId(json.JobId)
         }
       } catch (error) {
         console.log("error", error);
       }
+
+      setImportState("importDone");
+      setUserData([]);
     }
-
-    // console.log('errorMsg', errorMsg)
-
-    setImportState("importDone");
-    setErrorLog(errorMsg);
-    setUserData([]);
-    setResult([success, userData.length, userData.length]);
+    else {
+      alert ("No valid data to import")
+    }
   };
 
   const ImportButton = () => (
     <Button
       label="Import"
-      onClick={handleMyImport}
+      onClick={submitUserData}
       variant="contained"
       color="primary"
       startIcon={null}
@@ -229,86 +234,84 @@ const UserImport = () => {
       style={{ margin: "20px", padding: "0px 20px 20px 20px", minHeight: "x" }}
     >
       <CssBaseline />
-        <h1> Import Users</h1>
-        <h3> {importUserMaxAmount} users per import maximum</h3>
-        {importState === "csvValid" && (
-          <SimpleForm
-            toolbar={
-              <>
-                <ImportButton />
-                <Button
-                  label="Cancel"
-                  onClick={() => {
-                    setUserData([]);
-                    setImportState("init");
-                  }}
-                  color="primary"
-                  startIcon={<></>}
-                />
-              </>
-            }
-          >
-            <UserImportList data={userData} />
-            <br />
-            <br />
-            <FormGroup>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={checked}
-                    id="notify"
-                    onChange={(e) => setChecked(e.target.checked)}
-                  />
-                }
-                label="Send an invitation email to user now"
+      <h1> Import Users</h1>
+      {importState === "csvValid" && (
+        <SimpleForm
+          toolbar={
+            <>
+              <ImportButton />
+              <Button
+                label="Cancel"
+                onClick={() => {
+                  setUserData([]);
+                  setImportState("init");
+                }}
+                color="primary"
+                startIcon={<></>}
               />
-            </FormGroup>
-            <br />
-          </SimpleForm>
-        )}
-        {(importState === "importing" || importState === "parsing") && (
+            </>
+          }
+        >
+          <h3> {importUserMaxAmount} users per import maximum</h3>
+          <UserImportListWidget data={userData} />
+          <br />
+          <br />
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={checked}
+                  id="notify"
+                  onChange={(e) => setChecked(e.target.checked)}
+                />
+              }
+              label="Send an invitation email to user now"
+            />
+          </FormGroup>
+          <br />
+        </SimpleForm>
+      )}
+      {
+        (importState === "importing" || importState === "parsing") && (
           <>
+            <h3> {importUserMaxAmount} users per import maximum</h3>
             <CircularProgress sx={{ marginRight: 1 }} size={18} thickness={2} />
             <Typography variant="body2">
               {importState}...{" "}
-              {importState === "importing" &&
-                `${result[1]} of ${result[2]} Records`}
             </Typography>
-            {importState === "importing" && (
-              <Typography variant="body2">
-                Do not leave this page during import.
-              </Typography>
-            )}
+            <Typography variant="body2">
+              Do not leave this page during import.
+            </Typography>
           </>
-        )}
-        {importState === "importDone" && (
+        )
+      }
+      {
+        importState === "importDone" && (
           <>
-            <h3> {`${result[0]} of ${result[2]} Users Imported`} </h3>
-            {errorLog.length > 0 && <h4> Issues </h4>}
+            <h3> {`Import Users task submitted - jobid : ${jobId}`} </h3>
             <Grid container>
-              {errorLog.map((el, idx) => (
-                <Grid item xs={5} sm={5} md={5} lg={5}>
-                  <Typography variant="body2" color="darkred" key={idx}>
-                    {el}
-                  </Typography>
-                </Grid>
-              ))}
+              <Typography variant="body2" >
+                User import job submitted. Please wait a few minutes and check the result.
+              </Typography>
             </Grid>
             <br />
             <Button
-              label="View Users"
+              label="Okay"
               onClick={handleClick}
               variant="contained"
               color="primary"
               startIcon={<></>}
             />
           </>
-        )}
-        {importState === "init" && (
+        )
+      }
+      {
+        importState === "init" && (
           <SimpleForm
-            onSubmit={updateloadCSV}
+            onSubmit={parseCSVToUserData}
             toolbar={<SaveButton label="Load Data" icon={<></>} />}
           >
+            <h3> {importUserMaxAmount} users per import maximum</h3>
             <FileInput
               source="csvFile"
               label="Upload file (.csv)"
@@ -330,9 +333,8 @@ const UserImport = () => {
               </a>
             </div>
           </SimpleForm>
-        )}
-    </Paper>
+        )
+      }
+    </Paper >
   );
 };
-
-export default UserImport;

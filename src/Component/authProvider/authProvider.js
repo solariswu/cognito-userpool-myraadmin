@@ -121,6 +121,7 @@ const authProvider = {
       id: profile.sub,
       fullName: profile.given_name ? profile.given_name : profile.email,//profile.given_name + ' ' + profile.family_name,
       avatar: profile.picture,
+      email: profile.email,
     });
   },
   handleCallback: async () => {

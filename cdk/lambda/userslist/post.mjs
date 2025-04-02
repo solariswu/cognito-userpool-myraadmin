@@ -114,17 +114,6 @@ export const postResData = async (data, cognitoISP) => {
 			console.log('create user - AdminLinkProviderForUser Error:', err);
 		}
 
-		// if (data.sms_mfa_enabled) {
-		// 	await cognitoISP.send(new AdminSetUserMFAPreferenceCommand({
-		// 		UserPoolId: process.env.USERPOOL_ID,
-		// 		Username: item.Username,
-		// 		SMSMfaSettings: {
-		// 			Enabled: true,
-		// 			PreferredMfa: true
-		// 		},
-		// 	}));
-		// }
-
 		const email_verified = item.Attributes.find(attr => attr.Name === "email_verified")?.Value;
 		const phone_number_verified = item.Attributes.find(attr => attr.Name === "phone_number_verified")?.Value;
 

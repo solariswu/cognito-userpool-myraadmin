@@ -18,7 +18,7 @@ import { red } from "@mui/material/colors";
 import { FormControlLabel, FormGroup, Switch, Typography } from "@mui/material";
 import { useState } from "react";
 
-export const UserImportList = (props) => {
+export const UserImportListWidget = (props) => {
   // const [page, setPage] = useState(1);
   const listContext = useList({ data: props.data, perPage: 25, page: 1 });
   const mailformatRegex = /^\b[A-Z0-9._+%-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b$/i;

@@ -1,28 +1,24 @@
 
-import { Function, Code, Runtime } from 'aws-cdk-lib/aws-lambda';
-import { Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as path from 'path';
 
 import { Construct } from 'constructs';
 import { AppStackProps } from './application';
-import {
-    CorsHttpMethod,
-    HttpApi,
-    HttpMethod,
-    DomainName,
-} from 'aws-cdk-lib/aws-apigatewayv2';
+
+import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { Policy, PolicyStatement} from 'aws-cdk-lib/aws-iam';
+import { CorsHttpMethod, HttpApi, HttpMethod, DomainName } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
-
+import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
+import { Function, Code, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { ApiGatewayv2DomainProperties } from 'aws-cdk-lib/aws-route53-targets';
+
 import { SSOUserPool } from './userpool';
 import { AMFACONFIG_TABLE, AMFATENANT_TABLE, current_stage, project_name, service_name, stage_config, samlproxy_api_url, tenant_id, samlproxy_metadata_url, samlproxy_reload_url } from '../config';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
-import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
-import { UserPool } from 'aws-cdk-lib/aws-cognito';
 
 
 export class SSOApiGateway {
@@ -39,6 +35,8 @@ export class SSOApiGateway {
     endUserAuthorizor: HttpUserPoolAuthorizer;
     amfaBaseUrl: string;
     spinfoTable: Table;
+    importUsersJobTable: Table;
+    importUsersWorkerLambda: Function;
 
     constructor(scope: Construct, props: AppStackProps) {
         this.scope = scope;
@@ -51,8 +49,55 @@ export class SSOApiGateway {
         this.amfaBaseUrl = props.amfaBaseUrl;
 
         this.spinfoTable = this.createSPInfoTable();
+        this.importUsersJobTable = this.createImportUsersJobTable();
 
         this.createHttpApi();
+    }
+
+    private createImportUsersWorkerLambda = (userPoolId) => {
+        const workerlambda = new Function(this.scope, 'importusersworkerlambda', {
+            runtime: Runtime.NODEJS_20_X,
+            handler: 'index.handler',
+            code: Code.fromAsset(path.join(__dirname, `/../lambda/importusersworker/dist`)),
+            environment: {
+                TENANT_ID: tenant_id ? tenant_id: ''
+            },
+            timeout: Duration.minutes(14)
+        });
+
+        workerlambda.role?.attachInlinePolicy(
+            new Policy(this.scope, `importusers-worker-policy`, {
+                statements: [
+                    new PolicyStatement({
+                        resources: [
+                            this.importUsersJobTable.tableArn,
+                        ],
+                        actions: [
+                            'dynamodb:GetItem',
+                            'dynamodb:UpdateItem',
+                        ],
+                    }),
+                    new PolicyStatement({
+                        resources: [
+                            this.userPoolIdToArn(userPoolId)
+                        ],
+                        actions: [
+                            'cognito-idp:AdminCreateUser',
+                            'cognito-idp:AdminAddUserToGroup',
+                            'cognito-idp:AdminLinkProviderForUser',
+                        ],
+                    }),
+                    new PolicyStatement({
+                        resources: ['*'],
+                        actions: [
+                            'secretsmanager:GetSecretValue',
+                        ],
+                    }),
+                ],
+            })
+        )
+
+        return workerlambda;
     }
 
     public attachAuthorizor(userPool: SSOUserPool) {
@@ -135,6 +180,22 @@ export class SSOApiGateway {
         return table;
     }
 
+    private createImportUsersJobTable() {
+		const table = new Table(this.scope, `${service_name}-${project_name}-${current_stage}-importjobid`, {
+            tableName: `${service_name}-${project_name}-${current_stage}-importjobid`,
+            partitionKey: { name: 'jobid', type: AttributeType.STRING },
+			billingMode: BillingMode.PAY_PER_REQUEST,
+			removalPolicy: RemovalPolicy.DESTROY,
+			timeToLiveAttribute: 'ttl',
+		});
+        table.addGlobalSecondaryIndex({
+            indexName: 'jobid-index',
+            partitionKey: { name: 'userpoolid', type: AttributeType.STRING },
+            sortKey: { name: 'createat', type: AttributeType.STRING }
+        })
+		return table;
+	}
+
     private createHttpApi() {
 
         const domain = new DomainName(this.scope, 'httpapi_domain', {
@@ -182,13 +243,15 @@ export class SSOApiGateway {
     public createAdminApiEndpoints(userPoolId: string, samlClientId: string, samlClientSecrect: string,
         spPortalClientId: string, userPoolDomain: string
     ) {
-        const resourceTypes = ['users', 'groups', 'idps', 'appclients'];
+        const resourceTypes = ['users', 'groups', 'idps', 'appclients', 'importusers'];
+
+        this.importUsersWorkerLambda = this.createImportUsersWorkerLambda(userPoolId);
 
         resourceTypes.forEach(resourceType => {
             const lambdaList = this.createLambda(
                 `${resourceType}list`,
                 userPoolId,
-                this.getPolicyStatements(this.userPoolIdToArn(userPoolId), resourceType, true),
+                this.getPolicyStatements(this.userPoolIdToArn(userPoolId), resourceType, true)
             );
             // 👇 add route for GET /resource
             this.api.addRoutes({
@@ -682,20 +745,22 @@ export class SSOApiGateway {
                     'cognito-idp:DescribeUserPoolClient',
                     'cognito-idp:CreateUserPoolClient']
             },
-            samls: {
+            importusers: {
                 normal: [],
                 list: []
             }
         };
 
-        statements.push(
-            new PolicyStatement({
-                actions: isList ? actions[resourceType as keyof typeof actions].list : actions[resourceType as keyof typeof actions].normal,
-                resources: [
-                    userPoolArn,
-                ],
-            })
-        );
+        if (resourceType !== 'importusers') {
+            statements.push(
+                new PolicyStatement({
+                    actions: isList ? actions[resourceType as keyof typeof actions].list : actions[resourceType as keyof typeof actions].normal,
+                    resources: [
+                        userPoolArn,
+                    ],
+                })
+            );
+        }
 
         if (resourceType === 'appclients') {
             statements.push(
@@ -710,32 +775,94 @@ export class SSOApiGateway {
                         'dynamodb:DeleteItem',
                     ],
                 })
-
             );
+        }
+
+        if (resourceType === 'importusers') {
+            statements.push(
+                new PolicyStatement({
+                    resources: [
+                        this.importUsersJobTable.tableArn,
+                    ],
+                    actions: [
+                        'dynamodb:GetItem',
+                        'dynamodb:PutItem',
+                        'dynamodb:Scan',
+                        'dynamodb:DeleteItem',
+                    ],
+                })
+            );
+            statements.push(
+                new PolicyStatement({
+                    resources: [
+                        this.importUsersWorkerLambda.functionArn,
+                    ],
+                    actions: [
+                        'lambda:InvokeFunction',
+                    ],
+                })
+            )
+            // add iam passrole permission
+            statements.push(
+                new PolicyStatement({
+                    resources: ['*'],
+                    actions: ['iam:PassRole'],
+                })
+            )
         }
 
         return statements;
     }
 
     private createLambda(lambdaName: string, userPoolId: string, statements: PolicyStatement[]) {
-        const lambda = new Function(this.scope, lambdaName, {
+
+        if (lambdaName === 'importuserslist') {
+
+            const lambda = new Function(this.scope, lambdaName, {
+                runtime: Runtime.NODEJS_20_X,
+                handler: "index.handler",
+                code: Code.fromAsset(
+                    path.join(__dirname, `/../lambda/${lambdaName}`),
+                ),
+                environment: {
+                    USERPOOL_ID: userPoolId,
+                    USERPOOL_DOMAINNAME: this.hostedUIDomain,
+                    AMFA_BASE_URL: this.amfaBaseUrl,
+                    AMFA_SPINFO_TABLE: this.spinfoTable.tableName,
+                    IMPORTUSERS_JOB_ID_TABLE: this.importUsersJobTable.tableName,
+                    IMPORTUSERS_WORKER_LAMBDA: this.importUsersWorkerLambda.functionName
+                },
+                timeout: Duration.minutes(5),
+            });
+
+            lambda.role?.attachInlinePolicy(
+                new Policy(this.scope, `${lambdaName}-policy`, { statements })
+            );
+            return lambda;
+        }
+        else {
+            const lambda = new Function(this.scope, lambdaName, {
             runtime: Runtime.NODEJS_20_X,
-            handler: 'index.handler',
-            code: Code.fromAsset(path.join(__dirname, `/../lambda/${lambdaName}`)),
+            handler: "index.handler",
+            code: Code.fromAsset(
+                path.join(__dirname, `/../lambda/${lambdaName}`),
+            ),
             environment: {
                 USERPOOL_ID: userPoolId,
                 USERPOOL_DOMAINNAME: this.hostedUIDomain,
                 AMFA_BASE_URL: this.amfaBaseUrl,
                 AMFA_SPINFO_TABLE: this.spinfoTable.tableName,
+                IMPORTUSERS_JOB_ID_TABLE: this.importUsersJobTable.tableName,
             },
-            timeout: Duration.minutes(5)
-        });
+            timeout: Duration.minutes(5),
+            });
 
-        lambda.role?.attachInlinePolicy(
-            new Policy(this.scope, `${lambdaName}-policy`, { statements })
-        );
+            lambda.role?.attachInlinePolicy(
+                new Policy(this.scope, `${lambdaName}-policy`, { statements })
+            );
 
-        return lambda;
+            return lambda;
+        }
     };
 
     private createSmtpConfigLambda() {
