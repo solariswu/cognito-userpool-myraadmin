@@ -1,6 +1,7 @@
 import * as crypto from "crypto";
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const headers = {
   "Access-Control-Allow-Headers":
@@ -12,10 +13,10 @@ const headers = {
 };
 
 const lambda = new LambdaClient({ region: process.env.AWS_REGION });
+const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 const genImportUsersJob = async (
   userPoolId,
-  userData,
   admin,
   notify,
   dynamodb,
@@ -24,15 +25,11 @@ const genImportUsersJob = async (
 
   const jobid = crypto.randomUUID();
   const timestamp = Date.now();
-  console.log ('userData', userData)
 
   const params = {
     Item: {
       jobid: {
         S: jobid,
-      },
-      userdata: {
-        S: JSON.stringify(userData),
       },
       notify: {
         BOOL: notify,
@@ -69,7 +66,6 @@ export const postResData = async (data, userpoolId, dynamodbISP) => {
   try {
     const jobid = await genImportUsersJob(
       userpoolId,
-      data.userData,
       data.admin,
       data.notify,
       dynamodbISP,
@@ -78,11 +74,24 @@ export const postResData = async (data, userpoolId, dynamodbISP) => {
     // start worker lambda with event type
     console.log("start worker lambda with event type");
 
+    const params = {
+      Bucket: process.env.IMPORTUSERS_BUCKET,
+      Key: `jobs/${jobid}`,
+      Body: JSON.stringify(data.userData),
+    }
+
+    console.log("jobdata s3 params:", params)
+    const res = await s3.send(new PutObjectCommand(params))
+    console.log("upload jobdata to s3:", res)
+
     const command = new InvokeCommand({
       FunctionName: process.env.IMPORTUSERS_WORKER_LAMBDA,
       InvocationType: "Event",
       Payload: JSON.stringify({
-        jobid: jobid,
+        jobid,
+        notify: data.notify,
+        userpoolId,
+        admin: data.admin,
         tableName: process.env.IMPORTUSERS_JOB_ID_TABLE,
       }),
     });

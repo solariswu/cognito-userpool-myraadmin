@@ -5,7 +5,7 @@ import { Construct } from 'constructs';
 import { AppStackProps } from './application';
 
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { Bucket, BucketAccessControl } from 'aws-cdk-lib/aws-s3';
 import { Policy, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import { CorsHttpMethod, HttpApi, HttpMethod, DomainName } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
@@ -37,6 +37,7 @@ export class SSOApiGateway {
     spinfoTable: Table;
     importUsersJobTable: Table;
     importUsersWorkerLambda: Function;
+    imoprtUsersJobsS3Bucket: Bucket;
 
     constructor(scope: Construct, props: AppStackProps) {
         this.scope = scope;
@@ -60,7 +61,8 @@ export class SSOApiGateway {
             handler: 'index.handler',
             code: Code.fromAsset(path.join(__dirname, `/../lambda/importusersworker/dist`)),
             environment: {
-                TENANT_ID: tenant_id ? tenant_id: ''
+                TENANT_ID: tenant_id ? tenant_id: '',
+                IMPORTUSERS_BUCKET: this.imoprtUsersJobsS3Bucket.bucketName,
             },
             timeout: Duration.minutes(14)
         });
@@ -91,6 +93,17 @@ export class SSOApiGateway {
                         resources: ['*'],
                         actions: [
                             'secretsmanager:GetSecretValue',
+                        ],
+                    }),
+                    new PolicyStatement({
+                        resources: [
+                            this.imoprtUsersJobsS3Bucket.bucketArn,
+                            `${this.imoprtUsersJobsS3Bucket.bucketArn}/*`,
+                        ],
+                        actions: [
+                            's3:GetObject',
+                            's3:PutObject',
+                            's3:DeleteObject',
                         ],
                     }),
                 ],
@@ -244,6 +257,12 @@ export class SSOApiGateway {
         spPortalClientId: string, userPoolDomain: string
     ) {
         const resourceTypes = ['users', 'groups', 'idps', 'appclients', 'importusers'];
+
+        this.imoprtUsersJobsS3Bucket = new Bucket(this.scope, `${project_name}-${this.region}-${current_stage}-ImportUsersBucket`, {
+                bucketName: `${this.account}-${this.region}-${project_name}-importusersjobs`,
+                accessControl: BucketAccessControl.PRIVATE,
+                removalPolicy: RemovalPolicy.DESTROY,
+            });
 
         this.importUsersWorkerLambda = this.createImportUsersWorkerLambda(userPoolId);
 
@@ -809,6 +828,19 @@ export class SSOApiGateway {
                     actions: ['iam:PassRole'],
                 })
             )
+            statements.push(
+                new PolicyStatement({
+                    resources: [
+                        this.imoprtUsersJobsS3Bucket.bucketArn,
+                        `${this.imoprtUsersJobsS3Bucket.bucketArn}/*`,
+                    ],
+                    actions: [
+                        's3:ListBucket',
+                        's3:GetObject',
+                        's3:PutObject',
+                    ],
+                })
+            )
         }
 
         return statements;
@@ -830,7 +862,8 @@ export class SSOApiGateway {
                     AMFA_BASE_URL: this.amfaBaseUrl,
                     AMFA_SPINFO_TABLE: this.spinfoTable.tableName,
                     IMPORTUSERS_JOB_ID_TABLE: this.importUsersJobTable.tableName,
-                    IMPORTUSERS_WORKER_LAMBDA: this.importUsersWorkerLambda.functionName
+                    IMPORTUSERS_WORKER_LAMBDA: this.importUsersWorkerLambda.functionName,
+                    IMPORTUSERS_BUCKET: this.imoprtUsersJobsS3Bucket.bucketName
                 },
                 timeout: Duration.minutes(5),
             });

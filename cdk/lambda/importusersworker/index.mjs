@@ -7,17 +7,19 @@ import {
 
 import {
   DynamoDBClient,
-  GetItemCommand,
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 
+import { S3Client, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+
 import { getSMTP } from './kmsUtil.mjs';
 
-//AWS configurations
 const cognitoISP = new CognitoIdentityProviderClient({
   region: process.env.AWS_REGION,
 });
 const dynamodbISP = new DynamoDBClient({ region: process.env.AWS_REGION });
+
+const s3ISP = new S3Client({ region: process.env.AWS_REGION });
 
 const rateLimit = 40; // the amount inparral user creation
 
@@ -28,27 +30,6 @@ const headers = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
-};
-
-const getUserData = async (jobid, tableName) => {
-  const getItemCommand = new GetItemCommand({
-    TableName: tableName,
-    Key: {
-      jobid: {
-        S: jobid,
-      },
-    },
-  });
-  const res = await dynamodbISP.send(getItemCommand);
-  if (res.Item) {
-    const userData = JSON.parse(res.Item.userdata.S);
-    const userpoolId = res.Item.userpoolid.S;
-    const notify = res.Item.notify.BOOL;
-    const admin = res.Item.createdby.S;
-    return { userData, userpoolId, notify, admin };
-  } else {
-    return { userData: null, userpoolId: null, notify: false, admin: null };
-  }
 };
 
 const createUser = async (params, groups, UserPoolId) => {
@@ -230,10 +211,24 @@ export const handler = async (event) => {
   // get users csv content from dynamodb table.
   // table index is event.jobid, table name is event.tableName
   // get the csv content from dynamodb table, and convert to csv content string.
-  const { userData, userpoolId, notify, admin } = await getUserData(
-    event.jobid,
-    event.tableName,
-  );
+
+  const { notify, userpoolId, admin } = event;
+
+  const res = await s3ISP.send(new GetObjectCommand({
+    Bucket: process.env.IMPORTUSERS_BUCKET,
+    Key: `jobs/${event.jobid}`,
+  }))
+
+  console.log('s3 get object res', res)
+
+  const str = await res.Body.transformToString();
+  console.log('str', str)
+  const userData = JSON.parse(str);
+
+  await s3ISP.send(new DeleteObjectCommand({
+    Bucket: process.env.IMPORTUSERS_BUCKET,
+    Key: `jobs/${event.jobid}`,
+  }))
 
   if (!userData) {
     const params =  {

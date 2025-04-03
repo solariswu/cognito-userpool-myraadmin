@@ -39,20 +39,16 @@ export const ImportUsersShow = () => {
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
-    if (! record.FailureDetails) {
-      return <></>
-    }
-
-    const amount = record.FailureDetails.length;
+    const amount = record.FailureDetails? record.FailureDetails.length : 0;
     // split FailureDetails into 2 parts
-    const firstHalf = record.FailureDetails.slice(0, (amount + 1) / 2);
-    const secondHalf = record.FailureDetails.slice((amount + 1) / 2);
-    const listData = firstHalf.map((item, index) => ({
+    const firstHalf = record.FailureDetails ? record.FailureDetails.slice(0, (amount + 1) / 2) : [];
+    const secondHalf = record.FailureDetails ? record.FailureDetails.slice((amount + 1) / 2) : [];
+    const listData = firstHalf && firstHalf.length >0 ? firstHalf.map((item, index) => ({
       ...item,
       username2: index < secondHalf.length ? secondHalf[index].username : null,
       reason2: index < secondHalf.length ? secondHalf[index].reason : null,
       id: index,
-    }))
+    })) : []
 
     const visibleRows = React.useMemo(
       () =>
@@ -84,7 +80,7 @@ export const ImportUsersShow = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {visibleRows.map((row, index) => (
+              { visibleRows && visibleRows.length > 0 && visibleRows.map((row, index) => (
                 <TableRow
                   key={row.id}
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
