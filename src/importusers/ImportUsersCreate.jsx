@@ -24,7 +24,7 @@ import { UserImportListWidget } from "./UserImportListWidget";
 
 const apiUrl = awsmobile.aws_backend_api_url;
 
-const importUserMaxAmount = 5000;
+const importUserMaxAmount = 100000;
 
 export const ImportUsersCreate = () => {
   const [userData, setUserData] = useState([]);
@@ -253,8 +253,6 @@ export const ImportUsersCreate = () => {
           }
         >
           <h3> {importUserMaxAmount} users per import maximum</h3>
-          <UserImportListWidget data={userData} />
-          <br />
           <br />
           <FormGroup>
             <FormControlLabel
@@ -269,6 +267,8 @@ export const ImportUsersCreate = () => {
             />
           </FormGroup>
           <br />
+          <br />
+          <UserImportListWidget data={userData} />
         </SimpleForm>
       )}
       {

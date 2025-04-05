@@ -79,8 +79,6 @@ export const UserImportListWidget = (props) => {
     page: 1,
   });
 
-  console.log("imported user data", props.data);
-
   return (
     <>
       <FormGroup>

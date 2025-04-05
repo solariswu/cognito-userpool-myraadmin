@@ -19,7 +19,7 @@ export const AmfaAppBar = (props) => {
       />
       <div style={{ flex: 3, textAlign: "center", verticalAlign: "center" }}>
         <img
-          src="https://cdn.jsdelivr.net/gh/solariswu/free-cdn-source@main/apersona-logo2.png"
+          src="/apersona-logo2.png"
           alt="logo"
           height="36"
           style={{ marginTop: "6px" }}

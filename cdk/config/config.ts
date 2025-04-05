@@ -5,8 +5,6 @@ export const service_name = "amfa";
 export const project_name = 'adminportal';
 export const current_stage = 'dev';
 
-export const logo_img_url = `https://${process.env.ADMINPORTAL_DOMAIN_NAME}/Logo.png`;
-
 export const tenant_id = process.env.TENANT_ID;
 
 export const amfa_api_base = process.env.TENANT_ID + '.' + process.env.ROOT_DOMAIN_NAME;
