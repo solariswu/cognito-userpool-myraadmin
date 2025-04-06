@@ -57,8 +57,6 @@ export const UserEdit = () => {
       }
     }
 
-    console.log("errors", errors);
-
     return errors;
   };
 

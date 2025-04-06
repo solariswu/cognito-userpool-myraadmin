@@ -104,6 +104,7 @@ export class SSOApiGateway {
                             's3:GetObject',
                             's3:PutObject',
                             's3:DeleteObject',
+                            's3:ListBucket',
                         ],
                     }),
                 ],
