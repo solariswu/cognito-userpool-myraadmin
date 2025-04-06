@@ -360,7 +360,9 @@ export const handler = async (event) => {
       i += 1;
     }
 
-    if (promises.length > 0) {
+    console.log('promises: ', promises);
+
+    if (promises.length > 0 && userData.length > rateLimit * parseInt(i / rateLimit)) {
       const importUserResults = await Promise.allSettled(promises);
       importUserResults.map((result, idx) => {
         if (result.status === "rejected") {
@@ -402,13 +404,15 @@ export const handler = async (event) => {
       }),
     );
 
-    const failedDetails = historyRes.Item.failedusers;
+    const failedDetails = JSON.parse(historyRes.Item.failedusers.S);
     failureResults.forEach((result) => {
       failedDetails.push({
         reason: result.reason,
         username: result.username,
       });
     });
+
+    const timestamp = Date.now();
 
     const params = {
       TableName: event.tableName,
@@ -458,6 +462,7 @@ export const handler = async (event) => {
     }
   } catch (err) {
     console.log("err", err);
+    const timestamp = Date.now();
 
     const params = {
       TableName: event.tableName,
