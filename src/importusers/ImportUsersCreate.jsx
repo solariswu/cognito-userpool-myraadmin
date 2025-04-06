@@ -186,7 +186,12 @@ export const ImportUsersCreate = () => {
       try {
         const res = await fetch(url, {
           method: "POST",
-          body: JSON.stringify({ userData: filteredData, admin: adminProfile?.email, notify: checked }),
+          body: JSON.stringify({
+            userData: filteredData,
+            admin: adminProfile?.email,
+            notify: checked,
+            totalusers: filteredData.length,
+          }),
           headers: {
             Authorization: localStorage.getItem("token"),
             "Content-Type": "application/json",
