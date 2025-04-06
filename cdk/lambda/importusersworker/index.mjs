@@ -210,81 +210,217 @@ export const handler = async (event) => {
 
   console.info("EVENT\n" + JSON.stringify(event, null, 2));
 
-  // get users csv content from dynamodb table.
-  // table index is event.jobid, table name is event.tableName
-  // get the csv content from dynamodb table, and convert to csv content string.
+  try {
+    // get users csv content from dynamodb table.
+    // table index is event.jobid, table name is event.tableName
+    // get the csv content from dynamodb table, and convert to csv content string.
 
-  const { notify, userpoolId, admin } = event;
+    const { notify, userpoolId, admin } = event;
 
-  const res = await s3ISP.send(
-    new GetObjectCommand({
-      Bucket: process.env.IMPORTUSERS_BUCKET,
-      Key: `jobs/${event.jobid}`,
-    }),
-  );
+    const res = await s3ISP.send(
+      new GetObjectCommand({
+        Bucket: process.env.IMPORTUSERS_BUCKET,
+        Key: `jobs/${event.jobid}`,
+      }),
+    );
 
-  console.log("s3 get object res", res);
+    console.log("s3 get object res", res);
 
-  const str = await res.Body.transformToString();
-  console.log("str", str);
-  let userData = JSON.parse(str);
-  let restUserData = [];
+    const str = await res.Body.transformToString();
+    console.log("str", str);
+    let userData = JSON.parse(str);
+    let restUserData = [];
 
-  if (userData.length > 5000) {
-    restUserData = userData.slice(5000);
-    userData = userData.slice(0, 5000);
-  }
+    if (userData.length > 5000) {
+      restUserData = userData.slice(5000);
+      userData = userData.slice(0, 5000);
+    }
 
-  if (!userData || userData.length === 0) {
+    if (!userData || userData.length === 0) {
+      const params = {
+        TableName: event.tableName,
+        Key: {
+          jobid: { S: event.jobid },
+        },
+        UpdateExpression: "SET jobstatus = :st",
+        ExpressionAttributeValues: {
+          ":st": { S: "STOPPED/NO-DATA" },
+        },
+        ReturnValues: "ALL_NEW",
+      };
+
+      console.log("params", params);
+
+      await dynamodbISP.send(new UpdateItemCommand(params));
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ type: "exception", message: "No data found" }),
+      };
+    }
+
+    if (restUserData.length > 0) {
+      await s3ISP.send(
+        new PutObjectCommand({
+          Bucket: process.env.IMPORTUSERS_BUCKET,
+          Key: `jobs/${event.jobid}`,
+          Body: JSON.stringify(restUserData),
+        }),
+      );
+    } else {
+      await s3ISP.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.IMPORTUSERS_BUCKET,
+          Key: `jobs/${event.jobid}`,
+        }),
+      );
+    }
+
+    if (userData.length > rateLimit * 10) {
+      // update job status to in progress
+      const params = {
+        TableName: event.tableName,
+        Key: {
+          jobid: { S: event.jobid },
+        },
+        UpdateExpression: "SET jobstatus = :st",
+        ExpressionAttributeValues: {
+          ":st": { S: "IN-PROGRESS" },
+        },
+        ReturnValues: "ALL_NEW",
+      };
+
+      console.log("params", params);
+
+      try {
+        const res = await dynamodbISP.send(new UpdateItemCommand(params));
+        console.log("res", res);
+      } catch (err) {
+        console.log("err", err);
+      }
+    }
+
+    // iterate the csv content one user by one user.
+    // for each user, call cognito adminCreateUser API to create user in the userpool - process.env.USERPOOL_ID
+    // Count and record successful users amount, count and record failed users amount and faild users' name in an array.
+
+    // iterate the csv content to fetch user infos
+    let i = 0;
+    let promises = [];
+    let failureResults = [];
+
+    while (i < userData.length) {
+      const data = userData[i];
+      const { attributes, groups } = transformUserAttributes(data);
+      const params = {
+        Username: data["email"]
+          .replace("@", "_")
+          .replace(".", "_")
+          .toLowerCase(),
+        ...(!notify && { MessageAction: "SUPPRESS" }),
+        UserAttributes: attributes,
+        UserPoolId: userpoolId,
+        DesiredDeliveryMediums: ["EMAIL"],
+      };
+
+      promises.push(createUser(params, groups, userpoolId));
+
+      if (i > 0 && i % rateLimit === 0) {
+        const importUserResults = await Promise.allSettled(promises);
+        console.log("importUserResults: ", importUserResults);
+        importUserResults.map((result, idx) => {
+          if (result.status === "rejected") {
+            console.log("create user error: ", result.reason);
+            console.log(
+              "item: ",
+              userData[i - rateLimit + idx],
+              "idx: ",
+              idx,
+              "i: ",
+              i,
+              "rateLimit: ",
+              rateLimit,
+            );
+            return (result.username = userData[i - rateLimit + idx]["email"]);
+          }
+        });
+        // count failure and success amount
+        failureResults = [
+          ...failureResults,
+          ...importUserResults
+            .filter((result) => result.status === "rejected")
+            .map((item) => {
+              return { username: item.username, reason: item.reason.name };
+            }),
+        ];
+
+        promises.length = 0;
+      }
+
+      i += 1;
+    }
+
+    if (promises.length > 0) {
+      const importUserResults = await Promise.allSettled(promises);
+      importUserResults.map((result, idx) => {
+        if (result.status === "rejected") {
+          console.log("create user error: ", result.reason);
+          console.log(
+            "remain item: ",
+            userData[rateLimit * parseInt(i / rateLimit) + idx],
+            "idx: ",
+            idx,
+            "i: ",
+            i,
+            "rateLimit: ",
+            rateLimit,
+          );
+          return (result.username =
+            userData[rateLimit * parseInt(i / rateLimit) + idx]["email"]);
+        }
+      });
+      console.log("importUserResults: ", importUserResults);
+      // count failure and success amount
+      failureResults = [
+        ...failureResults,
+        ...importUserResults
+          .filter((result) => result.status === "rejected")
+          .map((item) => {
+            return { username: item.username, reason: item.reason.name };
+          }),
+      ];
+    }
+
+    console.log("failure results", failureResults);
+
+    const historyRes = await dynamodbISP.send(
+      new GetItemCommand({
+        TableName: event.tableName,
+        Key: {
+          jobid: { S: event.jobid },
+        },
+      }),
+    );
+
+    const failedDetails = historyRes.Item.failedusers;
+    failureResults.forEach((result) => {
+      failedDetails.push({
+        reason: result.reason,
+        username: result.username,
+      });
+    });
+
     const params = {
       TableName: event.tableName,
       Key: {
         jobid: { S: event.jobid },
       },
-      UpdateExpression: "SET jobstatus = :st",
+      UpdateExpression:
+        "SET jobstatus = :st, failedusers = :fu, completiondate = :co",
       ExpressionAttributeValues: {
-        ":st": { S: "STOPPED/NO-DATA" },
-      },
-      ReturnValues: "ALL_NEW",
-    };
-
-    console.log("params", params);
-
-    await dynamodbISP.send(new UpdateItemCommand(params));
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ type: "exception", message: "No data found" }),
-    };
-  }
-
-  if (restUserData.length > 0) {
-    await s3ISP.send(
-      new PutObjectCommand({
-        Bucket: process.env.IMPORTUSERS_BUCKET,
-        Key: `jobs/${event.jobid}`,
-        Body: JSON.stringify(restUserData),
-      }),
-    );
-  } else {
-    await s3ISP.send(
-      new DeleteObjectCommand({
-        Bucket: process.env.IMPORTUSERS_BUCKET,
-        Key: `jobs/${event.jobid}`,
-      }),
-    );
-  }
-
-  if (userData.length > rateLimit * 10) {
-    // update job status to in progress
-    const params = {
-      TableName: event.tableName,
-      Key: {
-        jobid: { S: event.jobid },
-      },
-      UpdateExpression: "SET jobstatus = :st",
-      ExpressionAttributeValues: {
-        ":st": { S: "IN-PROGRESS" },
+        ":st": { S: restUserData.length > 0 ? "IN-PROGRESS" : "COMPLETED" },
+        ":fu": { S: JSON.stringify(failedDetails) },
+        ":co": { N: `${timestamp}` },
       },
       ReturnValues: "ALL_NEW",
     };
@@ -297,159 +433,53 @@ export const handler = async (event) => {
     } catch (err) {
       console.log("err", err);
     }
-  }
 
-  // iterate the csv content one user by one user.
-  // for each user, call cognito adminCreateUser API to create user in the userpool - process.env.USERPOOL_ID
-  // Count and record successful users amount, count and record failed users amount and faild users' name in an array.
+    if (restUserData.length > 0) {
+      const response = await lambda.send(command);
+      console.log("start new worker lambda response:", response);
 
-  // iterate the csv content to fetch user infos
-  let i = 0;
-  let promises = [];
-  let failureResults = [];
-
-  while (i < userData.length) {
-    const data = userData[i];
-    const { attributes, groups } = transformUserAttributes(data);
-    const params = {
-      Username: data["email"].replace("@", "_").replace(".", "_").toLowerCase(),
-      ...(!notify && { MessageAction: "SUPPRESS" }),
-      UserAttributes: attributes,
-      UserPoolId: userpoolId,
-      DesiredDeliveryMediums: ["EMAIL"],
-    };
-
-    promises.push(createUser(params, groups, userpoolId));
-
-    if (i > 0 && i % rateLimit === 0) {
-      const importUserResults = await Promise.allSettled(promises);
-      console.log("importUserResults: ", importUserResults);
-      importUserResults.map((result, idx) => {
-        if (result.status === "rejected") {
-          console.log("create user error: ", result.reason);
-          console.log(
-            "item: ",
-            userData[i - rateLimit + idx],
-            "idx: ",
-            idx,
-            "i: ",
-            i,
-            "rateLimit: ",
-            rateLimit,
-          );
-          return (result.username = userData[i - rateLimit + idx]["email"]);
-        }
-      });
-      // count failure and success amount
-      failureResults = [
-        ...failureResults,
-        ...importUserResults
-          .filter((result) => result.status === "rejected")
-          .map((item) => {
-            return { username: item.username, reason: item.reason.name };
-          }),
-      ];
-
-      promises.length = 0;
-    }
-
-    i += 1;
-  }
-
-  if (promises.length > 0) {
-    const importUserResults = await Promise.allSettled(promises);
-    importUserResults.map((result, idx) => {
-      if (result.status === "rejected") {
-        console.log("create user error: ", result.reason);
-        console.log(
-          "remain item: ",
-          userData[rateLimit * parseInt(i / rateLimit) + idx],
-          "idx: ",
-          idx,
-          "i: ",
-          i,
-          "rateLimit: ",
-          rateLimit,
+      return {
+        statusCode: 202,
+        headers,
+        body: JSON.stringify({ message: "Import job started.", JobId: jobid }),
+      };
+    } else {
+      //Todo: send email to admin
+      if (admin) {
+        let smtpRes = await getSMTP();
+        smtpRes.toUser = admin;
+        await sendResult(
+          event.jobid,
+          failedDetails.length,
+          userData.length,
+          smtpRes,
         );
-        return (result.username =
-          userData[rateLimit * parseInt(i / rateLimit) + idx]["email"]);
       }
-    });
-    console.log("importUserResults: ", importUserResults);
-    // count failure and success amount
-    failureResults = [
-      ...failureResults,
-      ...importUserResults
-        .filter((result) => result.status === "rejected")
-        .map((item) => {
-          return { username: item.username, reason: item.reason.name };
-        }),
-    ];
-  }
+    }
+  } catch (err) {
+    console.log("err", err);
 
-  console.log("failure results", failureResults);
-
-  const historyRes = await dynamodbISP.send(
-    new GetItemCommand({
+    const params = {
       TableName: event.tableName,
       Key: {
         jobid: { S: event.jobid },
       },
-    }),
-  );
+      UpdateExpression: "SET jobstatus = :st, completiondate = :co",
+      ExpressionAttributeValues: {
+        ":st": { S: "ERRORER" },
+        ":co": { N: `${timestamp}` },
+      },
+      ReturnValues: "ALL_NEW",
+    };
 
-  const failedDetails = historyRes.Item.failedusers;
-  failureResults.forEach((result) => {
-    failedDetails.push({
-      reason: result.reason,
-      username: result.username,
-    });
-  });
+    console.log("params", params);
 
-  const params = {
-    TableName: event.tableName,
-    Key: {
-      jobid: { S: event.jobid },
-    },
-    UpdateExpression:
-      "SET jobstatus = :st, failedusers = :fu, completiondate = :co",
-    ExpressionAttributeValues: {
-      ":st": { S: restUserData.length > 0 ? "IN-PROGRESS" : "COMPLETED" },
-      ":fu": { S: JSON.stringify(failedDetails) },
-      ":co": { N: `${timestamp}` },
-    },
-    ReturnValues: "ALL_NEW",
-  };
-
-  console.log("params", params);
-
-  try {
-    const res = await dynamodbISP.send(new UpdateItemCommand(params));
-    console.log("res", res);
-  } catch (err) {
-    console.log("err", err);
-  }
-
-  if (restUserData.length > 0) {
-    const response = await lambda.send(command);
-    console.log("start new worker lambda response:", response);
+    await dynamodbISP.send(new UpdateItemCommand(params));
 
     return {
-      statusCode: 202,
+      statusCode: 500,
       headers,
-      body: JSON.stringify({ message: "Import job started.", JobId: jobid }),
-    };
-  } else {
-    //Todo: send email to admin
-    if (admin) {
-      let smtpRes = await getSMTP();
-      smtpRes.toUser = admin;
-      await sendResult(
-        event.jobid,
-        failedDetails.length,
-        userData.length,
-        smtpRes,
-      );
+      body: JSON.stringify({ message: "Failed to start import job." }),
     }
   }
-};
+}

@@ -64,7 +64,8 @@ export class SSOApiGateway {
                 TENANT_ID: tenant_id ? tenant_id: '',
                 IMPORTUSERS_BUCKET: this.imoprtUsersJobsS3Bucket.bucketName,
             },
-            timeout: Duration.minutes(14)
+            timeout: Duration.minutes(15),
+            retryAttempts: 0
         });
 
         workerlambda.role?.attachInlinePolicy(
