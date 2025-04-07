@@ -57,14 +57,17 @@ export class SSOApiGateway {
 
     private createImportUsersWorkerLambda = (userPoolId) => {
         const workerlambda = new Function(this.scope, 'importusersworkerlambda', {
+            functionName: `${project_name}-importusersworker-${this.region}`,
             runtime: Runtime.NODEJS_20_X,
             handler: 'index.handler',
             code: Code.fromAsset(path.join(__dirname, `/../lambda/importusersworker/dist`)),
             environment: {
                 TENANT_ID: tenant_id ? tenant_id: '',
                 IMPORTUSERS_BUCKET: this.imoprtUsersJobsS3Bucket.bucketName,
+                IMPORTUSERS_WORKER_LAMBDA: `${project_name}-importusersworker-${this.region}`,
             },
             timeout: Duration.minutes(15),
+            memorySize: 256,
             retryAttempts: 0
         });
 
@@ -106,6 +109,14 @@ export class SSOApiGateway {
                             's3:PutObject',
                             's3:DeleteObject',
                             's3:ListBucket',
+                        ],
+                    }),
+                    new PolicyStatement({
+                        resources: [
+                            `arn:aws:lambda:${this.region}:${this.account}:function:${project_name}-importusersworker-${this.region}`,
+                        ],
+                        actions: [
+                            'lambda:InvokeFunction',
                         ],
                     }),
                 ],

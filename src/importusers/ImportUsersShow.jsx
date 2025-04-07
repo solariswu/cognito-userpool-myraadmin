@@ -66,6 +66,9 @@ export const ImportUsersShow = () => {
       setPage(0);
     };
 
+    if (!record) return <p>Loading...</p>;
+    if (!(record.FailureDetails) || record.FailureDetails.length === 0) return <p>No failed users</p>;
+
     return (
       <Box sx={{ textAlign: 'left' }}>
         <h3>Failed Users:</h3>

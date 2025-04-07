@@ -66,13 +66,13 @@ export const handler = async (event) => {
         catch (e) {
           console.log("failedusers parse error: ", e);
         }
-      }
+      } 
 
       return {
         id: res.Item.jobid.S,
         JobId: res.Item.jobid.S,
         CreationDate: (new Date(parseInt(res.Item.timestamp.N))).toUTCString(),
-        CompletionDate: (new Date(parseInt(res.Item.completiondate.N))).toUTCString(),
+        ...(res.Item.completiondate && {CompletionDate: (new Date(parseInt(res.Item.completiondate.N))).toUTCString()}),
         Status: res.Item.jobstatus.S,
         FailedUsers: failedUsersNumber,
         FailureDetails,

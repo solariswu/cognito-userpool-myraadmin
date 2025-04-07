@@ -39,6 +39,7 @@ clean_up() {
     rm -rf cdk/lambda/samlslist/*.mjs cdk/lambda/samlslist/dist/*.map
     rm -rf cdk/lambda/brandings/*.mjs cdk/lambda/brandings/dist/*.map
     rm -rf cdk/lambda/brandingslist/*.mjs cdk/lambda/brandingslist/dist/*.map
+    rm -rf cdk/lambda/importusersworker/*.mjs cdk/lambda/importusersworker/dist/*.map
 }
 
 initialize_git() {

@@ -29,7 +29,9 @@ const dynamodbISP = new DynamoDBClient({ region: process.env.AWS_REGION });
 const s3ISP = new S3Client({ region: process.env.AWS_REGION });
 const lambda = new LambdaClient({ region: process.env.AWS_REGION });
 
-const rateLimit = 25; // the amount inparral user creation //addusertogroup and linkprovider are 25 RPS.
+const rateLimit = 40; // the amount inparral user creation //addusertogroup and linkprovider are 25 RPS.
+const userGroupsRPS = 22;
+const linkUserRPS = 22;
 
 const headers = {
   "Access-Control-Allow-Headers":
@@ -38,67 +40,6 @@ const headers = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
-};
-
-const createUser = async (params, groups, UserPoolId) => {
-  const assignApplications = async (Username) => {
-    const promises = groups.map((group) =>
-      cognitoISP.send(
-        new AdminAddUserToGroupCommand({
-          UserPoolId,
-          GroupName: group,
-          Username,
-        }),
-      ),
-    );
-
-    console.log("promises", promises);
-
-    if (promises.length) {
-      const resAddGroups = await Promise.allSettled(promises);
-      console.log("resAddGroups", resAddGroups);
-    }
-  };
-
-  console.log("admin create user params", params, "groups", groups);
-
-  const resData = await cognitoISP.send(new AdminCreateUserCommand(params));
-  const item = resData.User;
-
-  console.log("resData", resData);
-
-  if (item) {
-    if (groups && groups.length > 0) {
-      try {
-        await assignApplications(item.Username);
-      } catch (err) {
-        console.log("create user - assignApplications/groups Error:", err);
-      }
-    }
-
-    const userEmail = params.UserAttributes.find(
-      (attr) => attr.Name === "email",
-    )?.Value;
-    try {
-      await cognitoISP.send(
-        new AdminLinkProviderForUserCommand({
-          UserPoolId,
-          DestinationUser: {
-            ProviderName: "Cognito",
-            ProviderAttributeName: "email",
-            ProviderAttributeValue: userEmail.toLowerCase(),
-          },
-          SourceUser: {
-            ProviderName: "apersona",
-            ProviderAttributeName: "email",
-            ProviderAttributeValue: userEmail.toLowerCase(),
-          },
-        }),
-      );
-    } catch (err) {
-      console.log("create user - AdminLinkProviderForUser Error:", err);
-    }
-  }
 };
 
 const sendResult = async (jobid, failedNum, totalNum, secret) => {
@@ -139,6 +80,7 @@ const sendResult = async (jobid, failedNum, totalNum, secret) => {
   }
 };
 
+const batchUserAmount = 5000;
 // input event format:
 //   { jobid: jobid, tableName: tableName }
 export const handler = async (event) => {
@@ -225,16 +167,18 @@ export const handler = async (event) => {
       }),
     );
 
-    console.log("s3 get object res", res);
+    // console.log("s3 get object res", res);
 
     const str = await res.Body.transformToString();
-    console.log("str", str);
+    // console.log("str", str);
     let userData = JSON.parse(str);
     let restUserData = [];
 
-    if (userData.length > 5000) {
-      restUserData = userData.slice(5000);
-      userData = userData.slice(0, 5000);
+    console.log ('get ', userData.length, ' users info from s3')
+
+    if (userData.length > batchUserAmount) {
+      restUserData = userData.slice(batchUserAmount);
+      userData = userData.slice(0, batchUserAmount);
     }
 
     if (!userData || userData.length === 0) {
@@ -309,92 +253,136 @@ export const handler = async (event) => {
     let i = 0;
     let promises = [];
     let failureResults = [];
+    let userGroupsPromises = [];
+    let linkUserPromises = [];
+    let userGroups = [];
 
-    while (i < userData.length) {
-      const data = userData[i];
-      const { attributes, groups } = transformUserAttributes(data);
-      const params = {
-        Username: data["email"]
-          .replace("@", "_")
-          .replace(".", "_")
-          .toLowerCase(),
-        ...(!notify && { MessageAction: "SUPPRESS" }),
-        UserAttributes: attributes,
-        UserPoolId: userpoolId,
-        DesiredDeliveryMediums: ["EMAIL"],
-      };
+    for (i = 0; i < userData.length; i += rateLimit) {
+      const userDataSlice = userData.slice(i, i + rateLimit);
+      userDataSlice.map ((user, idx) => {
+        const { attributes, groups } = transformUserAttributes(user);
+        const Username = user["email"]
+            .replace("@", "_")
+            .replace(".", "_")
+            .toLowerCase();
+          userGroups[i + idx] = groups;
 
-      promises.push(createUser(params, groups, userpoolId));
+          const params = {
+            Username,
+            ...(!notify && { MessageAction: "SUPPRESS" }),
+            UserAttributes: attributes,
+            UserPoolId: userpoolId,
+            DesiredDeliveryMediums: ["EMAIL"],
+          };
 
-      if (i > 0 && i % rateLimit === 0) {
-        const importUserResults = await Promise.allSettled(promises);
-        console.log("importUserResults: ", importUserResults);
-        importUserResults.map((result, idx) => {
-          if (result.status === "rejected") {
-            console.log("create user error: ", result.reason);
-            console.log(
-              "item: ",
-              userData[i - rateLimit + idx],
-              "idx: ",
-              idx,
-              "i: ",
-              i,
-              "rateLimit: ",
-              rateLimit,
-            );
-            return (result.username = userData[i - rateLimit + idx]["email"]);
-          }
-        });
-        // count failure and success amount
-        failureResults = [
-          ...failureResults,
-          ...importUserResults
-            .filter((result) => result.status === "rejected")
-            .map((item) => {
-              return { username: item.username, reason: item.reason.name };
-            }),
-        ];
-
-        promises.length = 0;
-      }
-
-      i += 1;
-    }
-
-    console.log('promises: ', promises);
-
-    if (promises.length > 0 && userData.length > rateLimit * parseInt(i / rateLimit)) {
-      const importUserResults = await Promise.allSettled(promises);
-      importUserResults.map((result, idx) => {
-        if (result.status === "rejected") {
-          console.log("create user error: ", result.reason);
-          console.log(
-            "remain item: ",
-            userData[rateLimit * parseInt(i / rateLimit) + idx],
-            "idx: ",
-            idx,
-            "i: ",
-            i,
-            "rateLimit: ",
-            rateLimit,
+          promises.push(
+            cognitoISP.send(new AdminCreateUserCommand(params)),
           );
-          return (result.username =
-            userData[rateLimit * parseInt(i / rateLimit) + idx]["email"]);
+        })
+
+      if (promises.length) {
+        try {
+          const importUserResults = await Promise.allSettled(promises);
+          // console.log("importUserResults: ", importUserResults);
+          importUserResults.map((result, idx) => {
+            const userEmail = userData[i+idx]["email"];
+            if (result.status === "rejected") {
+              // console.log(
+              //   "create user error: ", result.reason,
+              //   "userdata: ", userData[i+idx],
+              //   "idx: ", idx, "i: ", i, "rateLimit: ", rateLimit,
+              // );
+              return (result.username = userEmail);
+            }
+            else if (result.status === "fulfilled") {
+              // console.log("create user success: ", result.value);
+              const groups = userGroups[i + idx];
+              userGroupsPromises.push(
+                ...groups.map((group) =>
+                  cognitoISP.send(
+                    new AdminAddUserToGroupCommand({
+                      UserPoolId: userpoolId,
+                      GroupName: group,
+                      Username : userEmail
+                      .replace("@", "_")
+                      .replace(".", "_")
+                      .toLowerCase(),
+                    }),
+                  ),
+                ),
+              );
+              linkUserPromises.push(
+                cognitoISP.send(
+                  new AdminLinkProviderForUserCommand({
+                    UserPoolId: userpoolId,
+                    DestinationUser: {
+                      ProviderName: "Cognito",
+                      ProviderAttributeName: "email",
+                      ProviderAttributeValue: userEmail.toLowerCase(),
+                    },
+                    SourceUser: {
+                      ProviderName: "apersona",
+                      ProviderAttributeName: "email",
+                      ProviderAttributeValue: userEmail.toLowerCase(),
+                    },
+                  }),
+                ),
+              );
+            }
+            else {
+              console.log("create user unknown: ", result);
+            }
+            return result;
+          })
+          console.log ('import users idx from ', i, ' to ', i + promises.length)
+          console.log ('import users result, failed: ', 
+            importUserResults.filter((result) => result.status === "rejected").length, ' success: ', importUserResults.filter(
+              (result) => result.status === "fulfilled").length)
+          // count failure and success amount
+          failureResults = [
+            ...failureResults,
+            ...importUserResults
+              .filter((result) => result.status === "rejected")
+              .map((item) => {
+                return { username: item.username, reason: item.reason.name };
+              }),
+          ];
+          console.log("failureResults number: ", failureResults.length);
         }
-      });
-      console.log("importUserResults: ", importUserResults);
-      // count failure and success amount
-      failureResults = [
-        ...failureResults,
-        ...importUserResults
-          .filter((result) => result.status === "rejected")
-          .map((item) => {
-            return { username: item.username, reason: item.reason.name };
-          }),
-      ];
+        catch (err) {
+          console.log("err", err);
+        }
+        promises = [];
+
+        for (let j = 0; j < userGroupsPromises.length; j += userGroupsRPS) {
+          const userGroupsSlice = userGroupsPromises.slice(j, j + userGroupsRPS);
+          try {
+            const userGroupsRes = await Promise.allSettled(userGroupsSlice);
+            console.log("userGroupsRes", userGroupsRes);
+          }
+          catch (err) {
+            console.log("err", err);
+          }
+        }
+        userGroupsPromises = [];
+
+        for (let j = 0; j < linkUserPromises.length; j += linkUserRPS) {
+          const linkUserSlice = linkUserPromises.slice(j, j + linkUserRPS);
+          try {
+            const linkUserRes = await Promise.allSettled(linkUserSlice);
+            console.log("linkUserRes", linkUserRes);
+          }
+          catch (err) {
+            console.log("err", err);
+          }
+        }
+        linkUserPromises = [];
+      }
     }
 
-    console.log("failure results", failureResults);
+    promises = [];
+
+    console.log("failure results total amount: ", failureResults.length);
 
     const historyRes = await dynamodbISP.send(
       new GetItemCommand({
@@ -439,6 +427,7 @@ export const handler = async (event) => {
       console.log("err", err);
     }
 
+    console.log
     if (restUserData.length > 0) {
       const command = new InvokeCommand({
         FunctionName: process.env.IMPORTUSERS_WORKER_LAMBDA,
@@ -448,7 +437,7 @@ export const handler = async (event) => {
           notify,
           userpoolId,
           admin,
-          tableName: process.env.IMPORTUSERS_JOB_ID_TABLE,
+          tableName: event.tableName,
         }),
       });
 
@@ -458,10 +447,10 @@ export const handler = async (event) => {
       return {
         statusCode: 202,
         headers,
-        body: JSON.stringify({ message: "Import job started.", JobId: jobid }),
+        body: JSON.stringify({ message: "Import job started.", JobId: event.jobid }),
       };
     } else {
-      //Todo: send email to admin
+      //send email to admin
       if (admin) {
         let smtpRes = await getSMTP();
         smtpRes.toUser = admin;
