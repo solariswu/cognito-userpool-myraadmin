@@ -55,17 +55,18 @@ const dataProvider = {
                 }
                 queriedTokens[resource][page] = json.PaginationToken;
 
-                return ({
-                    data: json.data,
-                    // pageInfo: {
-                    //     hasPreviousPage: false,
-                    //     hasNextPage: true,
-                    // }
-                    pageInfo: {
-                        hasPreviousPage: page > 1 ? true : false,
-                        ...json.PaginationToken && { hasNextPage: true }
-                    },
-                })
+                return {
+                  data: json.data,
+                  // pageInfo: {
+                  //     hasPreviousPage: false,
+                  //     hasNextPage: true,
+                  // }
+                  pageInfo: {
+                    hasPreviousPage: page > 1 ? true : false,
+                    ...(json.PaginationToken && { hasNextPage: true }),
+                  },
+                  ...(json.total && { total: json.total }),
+                };
             })
     },
     getOne: (resource, params) => {

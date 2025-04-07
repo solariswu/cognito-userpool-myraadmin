@@ -34,7 +34,7 @@ export const UserImportListWidget = (props) => {
   let hasVoiceNumber = false;
   let hasCity = false;
 
-  const [checked, setChecked] = useState(false);
+  const [checked, setChecked] = useState(true);
   // /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
   const filteredData = props.data.filter((item) => {
     if (item.middle_name && item.middle_name.length > 0) hasMiddleName = true;
@@ -86,7 +86,7 @@ export const UserImportListWidget = (props) => {
           control={
             <Switch
               checked={checked}
-              id="notify"
+              id="malformated-data-only"
               onChange={(e) => setChecked(e.target.checked)}
             />
           }
@@ -99,7 +99,12 @@ export const UserImportListWidget = (props) => {
         <ListContextProvider
           value={checked ? filteredListContext : listContext}
         >
-          <Datagrid bulkActionButtons={false} resource="users" size="medium" optimized>
+          <Datagrid
+            bulkActionButtons={false}
+            resource="users"
+            size="medium"
+            optimized
+          >
             <FunctionField
               label="Email"
               render={(record) =>
