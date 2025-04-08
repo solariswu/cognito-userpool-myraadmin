@@ -7,7 +7,6 @@ import {
 
 import {
   DynamoDBClient,
-  GetItemCommand,
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 
@@ -30,8 +29,6 @@ const s3ISP = new S3Client({ region: process.env.AWS_REGION });
 const lambda = new LambdaClient({ region: process.env.AWS_REGION });
 
 const rateLimit = 40; // the amount inparral user creation //addusertogroup and linkprovider are 25 RPS.
-const userGroupsRPS = 22;
-const linkUserRPS = 22;
 
 const headers = {
   "Access-Control-Allow-Headers":
@@ -80,7 +77,7 @@ const sendResult = async (jobid, failedNum, totalNum, secret) => {
   }
 };
 
-const batchUserAmount = 5000;
+const batchUserAmount = 1000;
 // input event format:
 //   { jobid: jobid, tableName: tableName }
 export const handler = async (event) => {
@@ -174,7 +171,7 @@ export const handler = async (event) => {
     let userData = JSON.parse(str);
     let restUserData = [];
 
-    console.log ('get ', userData.length, ' users info from s3')
+    console.log("get ", userData.length, " users info from s3");
 
     if (userData.length > batchUserAmount) {
       restUserData = userData.slice(batchUserAmount);
@@ -253,91 +250,61 @@ export const handler = async (event) => {
     let i = 0;
     let promises = [];
     let failureResults = [];
-    let userGroupsPromises = [];
-    let linkUserPromises = [];
     let userGroups = [];
 
     for (i = 0; i < userData.length; i += rateLimit) {
       const userDataSlice = userData.slice(i, i + rateLimit);
-      userDataSlice.map ((user, idx) => {
+      userDataSlice.map((user, idx) => {
         const { attributes, groups } = transformUserAttributes(user);
         const Username = user["email"]
-            .replace("@", "_")
-            .replace(".", "_")
-            .toLowerCase();
-          userGroups[i + idx] = groups;
+          .replace("@", "_")
+          .replace(".", "_")
+          .toLowerCase();
+        userGroups[i + idx] = groups;
 
-          const params = {
-            Username,
-            ...(!notify && { MessageAction: "SUPPRESS" }),
-            UserAttributes: attributes,
-            UserPoolId: userpoolId,
-            DesiredDeliveryMediums: ["EMAIL"],
-          };
+        const params = {
+          Username,
+          ...(!notify && { MessageAction: "SUPPRESS" }),
+          UserAttributes: attributes,
+          UserPoolId: userpoolId,
+          DesiredDeliveryMediums: ["EMAIL"],
+        };
 
-          promises.push(
-            cognitoISP.send(new AdminCreateUserCommand(params)),
-          );
-        })
+        promises.push(cognitoISP.send(new AdminCreateUserCommand(params)));
+      });
+
+      let importUserResults = [];
 
       if (promises.length) {
         try {
-          const importUserResults = await Promise.allSettled(promises);
+          importUserResults = await Promise.allSettled(promises);
           // console.log("importUserResults: ", importUserResults);
           importUserResults.map((result, idx) => {
-            const userEmail = userData[i+idx]["email"];
+            const userEmail = userData[i + idx]["email"];
+            const username = userEmail
+              .replace("@", "_")
+              .replace(".", "_")
+              .toLowerCase();
+
             if (result.status === "rejected") {
-              // console.log(
-              //   "create user error: ", result.reason,
-              //   "userdata: ", userData[i+idx],
-              //   "idx: ", idx, "i: ", i, "rateLimit: ", rateLimit,
-              // );
+              userGroups[i + idx] = [];
               return (result.username = userEmail);
-            }
-            else if (result.status === "fulfilled") {
-              // console.log("create user success: ", result.value);
-              const groups = userGroups[i + idx];
-              userGroupsPromises.push(
-                ...groups.map((group) =>
-                  cognitoISP.send(
-                    new AdminAddUserToGroupCommand({
-                      UserPoolId: userpoolId,
-                      GroupName: group,
-                      Username : userEmail
-                      .replace("@", "_")
-                      .replace(".", "_")
-                      .toLowerCase(),
-                    }),
-                  ),
-                ),
-              );
-              linkUserPromises.push(
-                cognitoISP.send(
-                  new AdminLinkProviderForUserCommand({
-                    UserPoolId: userpoolId,
-                    DestinationUser: {
-                      ProviderName: "Cognito",
-                      ProviderAttributeName: "email",
-                      ProviderAttributeValue: userEmail.toLowerCase(),
-                    },
-                    SourceUser: {
-                      ProviderName: "apersona",
-                      ProviderAttributeName: "email",
-                      ProviderAttributeValue: userEmail.toLowerCase(),
-                    },
-                  }),
-                ),
-              );
-            }
-            else {
+            } else if (result.status === "fulfilled") {
+              console.log("user:", userEmail, " created");
+            } else {
               console.log("create user unknown: ", result);
             }
             return result;
-          })
-          console.log ('import users idx from ', i, ' to ', i + promises.length)
-          console.log ('import users result, failed: ', 
-            importUserResults.filter((result) => result.status === "rejected").length, ' success: ', importUserResults.filter(
-              (result) => result.status === "fulfilled").length)
+          });
+          console.log("import users idx from ", i, " to ", i + promises.length);
+          console.log(
+            "import users result, failed: ",
+            importUserResults.filter((result) => result.status === "rejected")
+              .length,
+            " success: ",
+            importUserResults.filter((result) => result.status === "fulfilled")
+              .length,
+          );
           // count failure and success amount
           failureResults = [
             ...failureResults,
@@ -348,52 +315,95 @@ export const handler = async (event) => {
               }),
           ];
           console.log("failureResults number: ", failureResults.length);
-        }
-        catch (err) {
+        } catch (err) {
           console.log("err", err);
         }
         promises = [];
 
-        for (let j = 0; j < userGroupsPromises.length; j += userGroupsRPS) {
-          const userGroupsSlice = userGroupsPromises.slice(j, j + userGroupsRPS);
-          try {
-            const userGroupsRes = await Promise.allSettled(userGroupsSlice);
-            console.log("userGroupsRes", userGroupsRes);
-          }
-          catch (err) {
-            console.log("err", err);
-          }
-        }
-        userGroupsPromises = [];
+        const max = i + rateLimit > userData.length ? userData.length : i + rateLimit;
+        for (let k = i; k < max; k++) {
+          console.log("start to add users to groups");
+          const groups = userGroups[k];
+          const username = userData[k]["email"]
+            .replace("@", "_")
+            .replace(".", "_")
+            .toLowerCase();
 
-        for (let j = 0; j < linkUserPromises.length; j += linkUserRPS) {
-          const linkUserSlice = linkUserPromises.slice(j, j + linkUserRPS);
-          try {
-            const linkUserRes = await Promise.allSettled(linkUserSlice);
-            console.log("linkUserRes", linkUserRes);
+          if (groups && groups.length > 0) {
+            // await assignApplications(groups, username, userpoolId, cognitoISP);
+            for (let l = 0; l < groups.length; l++) {
+              const param = {
+                UserPoolId: userpoolId,
+                GroupName: groups[l],
+                Username: username,
+              };
+
+              console.log("add user group param", param);
+
+              try {
+                await cognitoISP.send(new AdminAddUserToGroupCommand(param));
+              } catch (err) {
+                console.log(
+                  "create user - assignApplications/groups Error:",
+                  err,
+                );
+              }
+            }
           }
-          catch (err) {
-            console.log("err", err);
+
+          if (
+            importUserResults[k - i] &&
+            importUserResults[k - i].status === "fulfilled"
+          ) {
+            const userEmail = userData[k]["email"];
+            const linkUserParam = {
+              Username: username,
+              UserPoolId: userpoolId,
+              DestinationUser: {
+                ProviderName: "Cognito",
+                ProviderAttributeName: "email",
+                ProviderAttributeValue:userEmail.toLowerCase(),
+              },
+              SourceUser: {
+                ProviderName: "apersona",
+                ProviderAttributeName: "email",
+                ProviderAttributeValue: userEmail.toLowerCase(),
+              },
+            };
+
+            try {
+              console.log("link user - ", userEmail);
+              await cognitoISP.send(
+                new AdminLinkProviderForUserCommand(linkUserParam),
+              );
+            } catch (err) {
+              console.log("link user error: ", err);
+            }
           }
         }
-        linkUserPromises = [];
       }
     }
 
     promises = [];
 
     console.log("failure results total amount: ", failureResults.length);
+    let failedDetails = [];
 
-    const historyRes = await dynamodbISP.send(
-      new GetItemCommand({
-        TableName: event.tableName,
-        Key: {
-          jobid: { S: event.jobid },
-        },
-      }),
-    );
+    try {
+      const historyRes = await s3ISP.send(
+        new GetObjectCommand({
+          Bucket: process.env.IMPORTUSERS_BUCKET,
+          Key: `jobs/${event.jobid}_result`,
+        }),
+      );
 
-    const failedDetails = JSON.parse(historyRes.Item.failedusers.S);
+      const historyStr = await historyRes.Body.transformToString();
+      failedDetails = JSON.parse(historyStr);
+    }
+    catch (err) {
+      console.log("err", err);
+    }
+
     failureResults.forEach((result) => {
       failedDetails.push({
         reason: result.reason,
@@ -403,20 +413,45 @@ export const handler = async (event) => {
 
     const timestamp = Date.now();
 
-    const params = {
-      TableName: event.tableName,
-      Key: {
-        jobid: { S: event.jobid },
-      },
-      UpdateExpression:
-        "SET jobstatus = :st, failedusers = :fu, completiondate = :co",
-      ExpressionAttributeValues: {
-        ":st": { S: restUserData.length > 0 ? "IN-PROGRESS" : "COMPLETED" },
-        ":fu": { S: JSON.stringify(failedDetails) },
-        ":co": { N: `${timestamp}` },
-      },
-      ReturnValues: "ALL_NEW",
-    };
+    let params = {};
+
+    if (restUserData.length > 0) {
+      params = {
+        TableName: event.tableName,
+        Key: {
+          jobid: { S: event.jobid },
+        },
+        UpdateExpression: "SET jobstatus = :st, failedusers = :fu",
+        ExpressionAttributeValues: {
+          ":st": { S: "IN-PROGRESS" },
+          ":fu": { N: `${failedDetails.length}` },
+        },
+        ReturnValues: "ALL_NEW",
+      };
+    } else {
+      params = {
+        TableName: event.tableName,
+        Key: {
+          jobid: { S: event.jobid },
+        },
+        UpdateExpression:
+          "SET jobstatus = :st, failedusers = :fu, completiondate = :co",
+        ExpressionAttributeValues: {
+          ":st": { S: "COMPLETED" },
+          ":fu": { N: `${failedDetails.length}` },
+          ":co": { N: `${timestamp}` },
+        },
+        ReturnValues: "ALL_NEW",
+      };
+    }
+
+    await s3ISP.send(
+      new PutObjectCommand({
+        Bucket: process.env.IMPORTUSERS_BUCKET,
+        Key: `jobs/${event.jobid}_result`,
+        Body: JSON.stringify(failedDetails),
+      }),
+    );
 
     console.log("params", params);
 
@@ -427,7 +462,7 @@ export const handler = async (event) => {
       console.log("err", err);
     }
 
-    console.log
+    console.log;
     if (restUserData.length > 0) {
       const command = new InvokeCommand({
         FunctionName: process.env.IMPORTUSERS_WORKER_LAMBDA,
@@ -447,10 +482,13 @@ export const handler = async (event) => {
       return {
         statusCode: 202,
         headers,
-        body: JSON.stringify({ message: "Import job started.", JobId: event.jobid }),
+        body: JSON.stringify({
+          message: "Import job started.",
+          JobId: event.jobid,
+        }),
       };
     } else {
-      //send email to admin
+      // send email to admin
       if (admin) {
         let smtpRes = await getSMTP();
         smtpRes.toUser = admin;
@@ -487,6 +525,6 @@ export const handler = async (event) => {
       statusCode: 500,
       headers,
       body: JSON.stringify({ message: "Failed to start import job." }),
-    }
+    };
   }
-}
+};

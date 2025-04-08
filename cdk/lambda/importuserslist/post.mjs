@@ -1,7 +1,7 @@
 import * as crypto from "crypto";
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 const headers = {
   "Access-Control-Allow-Headers":
@@ -13,7 +13,6 @@ const headers = {
 };
 
 const lambda = new LambdaClient({ region: process.env.AWS_REGION });
-const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 const genImportUsersJob = async (
   userPoolId,
@@ -41,9 +40,6 @@ const genImportUsersJob = async (
       totalusers: {
         N: `${totalusernumber}`,
       },
-      failedusers: {
-        S: "[]",
-      },
       userpoolid: {
         S: userPoolId,
       },
@@ -69,7 +65,7 @@ const genImportUsersJob = async (
   return jobid;
 };
 
-export const postResData = async (data, userpoolId, dynamodbISP) => {
+export const postResData = async (data, userpoolId, dynamodbISP, s3) => {
   try {
     const jobid = await genImportUsersJob(
       userpoolId,

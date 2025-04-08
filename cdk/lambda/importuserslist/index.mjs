@@ -1,8 +1,10 @@
 //AWS configurations
 import { ScanCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import postResData from "./post.mjs";
 
 const dynamoDBClient = new DynamoDBClient({ region: process.env.AWS_REGION });
+const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
 export const handler = async (event) => {
   console.info("EVENT\n" + JSON.stringify(event, null, 2));
@@ -22,6 +24,7 @@ export const handler = async (event) => {
         body,
         process.env.USERPOOL_ID,
         dynamoDBClient,
+        s3Client,
       );
       return postResult;
     } else {
@@ -76,25 +79,38 @@ export const handler = async (event) => {
         ":userpoolId": { S: process.env.USERPOOL_ID },
       };
 
-      let scanParams = {
-        TableName: process.env.IMPORTUSERS_JOB_ID_TABLE,
-        ConsistentRead: true,
-        // ...(PaginationToken && { ExclusiveStartKey: PaginationToken }),
-        FilterExpression,
-        ExpressionAttributeValues,
-        // ProjectionExpression: "jobid, status, importedusers, failedusers, createdby, timestamp",
-        Limit: 1000,//parseInt(event.queryStringParameters.perPage), // No of users to display per page
-        ReturnConsumedCapacity: "NONE",
-      };
+      let resData = [];
 
-      console.info("scanParams", scanParams);
+      do {
+        const scanParams = {
+          TableName: process.env.IMPORTUSERS_JOB_ID_TABLE,
+          ConsistentRead: true,
+          ...(PaginationToken && { ExclusiveStartKey: PaginationToken }),
+          FilterExpression,
+          ExpressionAttributeValues,
+          // ProjectionExpression: "jobid, status, importedusers, failedusers, createdby, timestamp",
+          Limit: 1000, // No of users to display per page
+          ReturnConsumedCapacity: "NONE",
+        };
 
-      const listImportUsersJobData = await dynamoDBClient.send(
-        new ScanCommand(scanParams),
-      );
-      console.log("listUserImportJobs result", listImportUsersJobData);
+        console.info("scanParams", scanParams);
 
-      let resData = listImportUsersJobData.Items;
+        const listImportUsersJobData = await dynamoDBClient.send(
+          new ScanCommand(scanParams),
+        );
+        console.log("listUserImportJobs result", listImportUsersJobData);
+
+        if (
+          listImportUsersJobData.Items &&
+          listImportUsersJobData.Items.length > 0
+        ) {
+          PaginationToken = listImportUsersJobData.LastEvaluatedKey;
+          resData = resData.concat(listImportUsersJobData.Items);
+        } else {
+          PaginationToken = null;
+        }
+      } while (PaginationToken && resData.length < 1000);
+
       const page = parseInt(event.queryStringParameters.page);
       const perPage = parseInt(event.queryStringParameters.perPage);
 
@@ -103,58 +119,90 @@ export const handler = async (event) => {
           if (a.timestamp.N > b.timestamp.N) return -1;
           else return 1;
         });
-      }
-      else {
+      } else {
         resData = [];
       }
 
       const start = (page - 1) * perPage;
-      const end = resData.length > start + perPage ? start + perPage : resData.length;
+      const end =
+        resData.length > start + perPage ? start + perPage : resData.length;
       const jobsCount = resData.length;
 
-
-      console.log("start", start, "end", end, "page", page, "perPage", perPage, "resData.length", resData.length);
+      console.log(
+        "start",
+        start,
+        "end",
+        end,
+        "page",
+        page,
+        "perPage",
+        perPage,
+        "resData.length",
+        resData.length,
+      );
 
       // If no remaining jobs are there, no paginationToken is returned from cognito
-      PaginationToken = (end >= resData.length) ? null : end;//listImportUsersJobData.LastEvaluatedKey;
+      PaginationToken = end >= resData.length ? null : end; //listImportUsersJobData.LastEvaluatedKey;
 
       if (resData.length > start) {
         resData = resData.slice(start, end);
       }
       console.log("resData", resData);
 
+      for (let i = 0; i < resData.length; i++) {
+        const params = {
+          Bucket: process.env.IMPORTUSERS_BUCKET,
+          Key: `jobs/${resData[i].jobid.S}_result`,
+        };
+        const command = new GetObjectCommand(params);
+        try {
+          const response = await s3Client.send(command);
+          const body = await response.Body.transformToString();
+          if (body) {
+            resData[i].failedusers = {};
+            resData[i].failedusers.S = body;
+          }
+        }
+        catch (e) {
+          console.log("error", e);
+        }
+      }
 
-      let res = []
+      let res = [];
 
       if (resData.length > 0) {
         res = resData.map((item) => {
           // console.log ('resdata item', item);
-          let data = {}
+          let data = {};
 
           data.id = item.jobid.S;
           data.JobId = item.jobid.S;
-          data.CreationDate = (new Date(parseInt(item.timestamp.N))).toUTCString();
+          data.CreationDate = new Date(
+            parseInt(item.timestamp.N),
+          ).toUTCString();
           if (item.completiondate) {
-            data.CompletionDate = (new Date(parseInt(item.completiondate.N))).toUTCString();
+            data.CompletionDate = new Date(
+              parseInt(item.completiondate.N),
+            ).toUTCString();
           }
           data.Status = item.jobstatus.S;
+
           if (item.failedusers) {
             let failedUsersNumber = 0;
             let FailureDetails = [];
             try {
-              JSON.parse(item.failedusers.S).map((el) =>{
+              JSON.parse(item.failedusers.S).map((el) => {
                 failedUsersNumber++;
                 FailureDetails.push(el);
-              })
-            }
-            catch (e) {
+              });
+            } catch (e) {
               console.log("failedusers parse error: ", e);
             }
             data.FailedUsers = failedUsersNumber;
-            data.FailureDetails = FailureDetails;
+            // data.FailureDetails = FailureDetails;
           }
           if (item.totalusers) {
-              data.TotalUsers = parseInt(item.totalusers.N);
+            data.TotalUsers = parseInt(item.totalusers.N);
           }
           data.CreatedBy = item.createdby.S;
           return data;
@@ -171,7 +219,7 @@ export const handler = async (event) => {
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
           "Access-Control-Expose-Headers": "Content-Range",
-          "Content-Range": `users ${start+1}-${end}/${jobsCount}`,
+          "Content-Range": `users ${start + 1}-${end}/${jobsCount}`,
         },
         body: JSON.stringify({
           data: res,
