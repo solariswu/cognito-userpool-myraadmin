@@ -3,7 +3,7 @@ import {
   GetItemCommand,
   DeleteItemCommand,
 } from "@aws-sdk/client-dynamodb";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 //AWS configurations
 const dynamodb = new DynamoDBClient({ region: process.env.AWS_REGION });
@@ -98,7 +98,7 @@ export const handler = async (event) => {
   };
 
   const deleteUserData = async (jobid, tableName) => {
-    const params = {
+    let params = {
       TableName: tableName,
       Key: {
         jobid: {
@@ -106,8 +106,18 @@ export const handler = async (event) => {
         },
       },
     };
-    const command = new DeleteItemCommand(params);
-    const res = await dynamodb.send(command);
+    let command = new DeleteItemCommand(params);
+    let res = await dynamodb.send(command);
+
+    params = {
+      Bucket: process.env.IMPORTUSERS_BUCKET,
+      Key: `jobs/${jobid}_result`,
+    };
+
+    command = new DeleteObjectCommand(params);
+    res = await s3.send(command);
+    console.log("delete success");
+
     return { id: jobid };
   };
 
