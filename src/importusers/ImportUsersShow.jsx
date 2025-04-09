@@ -67,7 +67,7 @@ export const ImportUsersShow = () => {
     };
 
     if (!record) return <p>Loading...</p>;
-    if (!(record.FailureDetails) || record.FailureDetails.length === 0) return <p>No failed users</p>;
+    if (!(record.FailureDetails) || record.FailureDetails.length === 0) return <p>{' '}</p>;
 
     return (
       <Box sx={{ textAlign: 'left' }}>
@@ -131,8 +131,6 @@ export const ImportUsersShow = () => {
               <TextField source="JobId" emptyText="---" />
             </Grid>
           </Grid>
-
-
           <Grid container spacing={2} >
             <Grid item xs={12} sm={6} md={6} lg={3}>
               Import Job status:

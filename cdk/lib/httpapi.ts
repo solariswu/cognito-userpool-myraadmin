@@ -871,7 +871,6 @@ export class SSOApiGateway {
                 ),
                 environment: {
                     USERPOOL_ID: userPoolId,
-                    USERPOOL_DOMAINNAME: this.hostedUIDomain,
                     AMFA_BASE_URL: this.amfaBaseUrl,
                     AMFA_SPINFO_TABLE: this.spinfoTable.tableName,
                     IMPORTUSERS_JOB_ID_TABLE: this.importUsersJobTable.tableName,
@@ -895,10 +894,10 @@ export class SSOApiGateway {
             ),
             environment: {
                 USERPOOL_ID: userPoolId,
-                USERPOOL_DOMAINNAME: this.hostedUIDomain,
                 AMFA_BASE_URL: this.amfaBaseUrl,
                 AMFA_SPINFO_TABLE: this.spinfoTable.tableName,
                 IMPORTUSERS_JOB_ID_TABLE: this.importUsersJobTable.tableName,
+                IMPORTUSERS_BUCKET: this.imoprtUsersJobsS3Bucket.bucketName,
             },
             timeout: Duration.minutes(5),
             });

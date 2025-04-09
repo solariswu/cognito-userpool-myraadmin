@@ -3,9 +3,11 @@ import {
   GetItemCommand,
   DeleteItemCommand,
 } from "@aws-sdk/client-dynamodb";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
 //AWS configurations
 const dynamodb = new DynamoDBClient({ region: process.env.AWS_REGION });
+const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 const headers = {
   "Access-Control-Allow-Headers":
@@ -51,28 +53,37 @@ export const handler = async (event) => {
     };
     const res = await dynamodb.send(new GetItemCommand(params));
 
-
     if (res.Item) {
       let failedUsersNumber = 0;
       let FailureDetails = [];
 
-      if (res.Item?.failedusers) {
-        try {
-          JSON.parse(res.Item.failedusers.S).map((item) => {
+      const params = {
+        Bucket: process.env.IMPORTUSERS_BUCKET,
+        Key: `jobs/${jobid}_result`,
+      };
+      const command = new GetObjectCommand(params);
+      try {
+        const response = await s3.send(command);
+        const body = await response.Body.transformToString();
+        if (body) {
+          JSON.parse(body).map((item) => {
             failedUsersNumber++;
             FailureDetails.push(item);
           });
         }
-        catch (e) {
-          console.log("failedusers parse error: ", e);
-        }
-      } 
+      } catch (e) {
+        console.log("error", e);
+      }
 
       return {
         id: res.Item.jobid.S,
         JobId: res.Item.jobid.S,
-        CreationDate: (new Date(parseInt(res.Item.timestamp.N))).toUTCString(),
-        ...(res.Item.completiondate && {CompletionDate: (new Date(parseInt(res.Item.completiondate.N))).toUTCString()}),
+        CreationDate: new Date(parseInt(res.Item.timestamp.N)).toUTCString(),
+        ...(res.Item.completiondate && {
+          CompletionDate: new Date(
+            parseInt(res.Item.completiondate.N),
+          ).toUTCString(),
+        }),
         Status: res.Item.jobstatus.S,
         FailedUsers: failedUsersNumber,
         FailureDetails,
@@ -86,7 +97,6 @@ export const handler = async (event) => {
     return { id: jobid };
   };
 
-
   const deleteUserData = async (jobid, tableName) => {
     const params = {
       TableName: tableName,
@@ -98,8 +108,8 @@ export const handler = async (event) => {
     };
     const command = new DeleteItemCommand(params);
     const res = await dynamodb.send(command);
-    return { id: jobid};
-  }
+    return { id: jobid };
+  };
 
   // For each user info, call cognito adminCreateUser API to create user in the userpool - process.env.USERPOOL_ID
   // Count and record successful users amount, count and record failed users amount and faild users' name in an array.
