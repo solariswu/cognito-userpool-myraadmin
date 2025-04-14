@@ -4,6 +4,7 @@ import {
 
 const samlurl = process.env.SAMLPROXY_API_URL;
 const samlReloadUrl = process.env.SAMLPROXY_RELOAD_URL;
+const samlCleanUrl = process.env.SAMLPROXY_CLEAN_URL;
 
 const postURL = `https://api.${process.env.AMFA_BASE_URL}/amfa`;
 
@@ -20,6 +21,17 @@ const updateSmtp = async (id, smtp) => fetch(postURL, {
 });
 
 const taggleSaml = async (cognitoToken, enable) => {
+	const resClean = await fetch(samlCleanUrl, {
+		method: "GET", // *GET, POST, PUT, DELETE, etc.
+		cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+		headers: {
+			"Content-Type": "application/json",
+			"Authorization": cognitoToken,
+		},
+	});
+	const resCleanText = await resClean.text();
+	console.log('samlproxy clean result', resClean);
+	console.log('samlproxy clean result text', resCleanText);
 
 	const response = await fetch(samlurl, {
 		method: "PUT",

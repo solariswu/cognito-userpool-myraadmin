@@ -18,7 +18,8 @@ import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { ApiGatewayv2DomainProperties } from 'aws-cdk-lib/aws-route53-targets';
 
 import { SSOUserPool } from './userpool';
-import { AMFACONFIG_TABLE, AMFATENANT_TABLE, current_stage, project_name, service_name, stage_config, samlproxy_api_url, tenant_id, samlproxy_metadata_url, samlproxy_reload_url } from '../config';
+import { AMFACONFIG_TABLE, AMFATENANT_TABLE, current_stage, project_name, service_name,
+    stage_config, samlproxy_api_url, tenant_id, samlproxy_metadata_url, samlproxy_reload_url, samlproxy_clean_url } from '../config';
 
 
 export class SSOApiGateway {
@@ -452,6 +453,7 @@ export class SSOApiGateway {
                 AMFA_SPINFO_TABLE: spinfoTable.tableName,
                 SAMLPROXY_API_URL: samlproxy_api_url,
                 SAMLPROXY_RELOAD_URL: samlproxy_reload_url,
+                SAMLPROXY_CLEAN_URL: samlproxy_clean_url,
             },
             timeout: Duration.minutes(5)
         });
@@ -552,6 +554,7 @@ export class SSOApiGateway {
                 AMFA_SPINFO_TABLE: spinfoTable.tableName,
                 SAMLPROXY_API_URL: samlproxy_api_url,
                 SAMLPROXY_RELOAD_URL: samlproxy_reload_url,
+                SAMLPROXY_CLEAN_URL: samlproxy_clean_url,
                 USER_POOL_ID: userPoolId,
             },
             timeout: Duration.minutes(5)
@@ -604,6 +607,7 @@ export class SSOApiGateway {
                 AMFA_BASE_URL: this.amfaBaseUrl,
                 SAMLPROXY_API_URL: samlproxy_api_url,
                 SAMLPROXY_RELOAD_URL: samlproxy_reload_url,
+                SAMLPROXY_CLEAN_URL: samlproxy_clean_url,
                 SAML_CLIENTID: samlClientId,
                 SAMLPROXY_METADATA_URL: samlproxy_metadata_url,
                 USER_POOL_ID: userPoolId,

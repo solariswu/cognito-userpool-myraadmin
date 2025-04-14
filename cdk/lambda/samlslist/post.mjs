@@ -81,6 +81,7 @@ const getEntityId = async (xmlUrl) => {
 }
 
 const samlReloadUrl = process.env.SAMLPROXY_RELOAD_URL;
+const samlCleanUrl = process.env.SAMLPROXY_CLEAN_URL;
 
 export const postResData = async (payload, samlurl, dynamodbISP, cognitoISP, cognitoToken) => {
 
@@ -90,6 +91,18 @@ export const postResData = async (payload, samlurl, dynamodbISP, cognitoISP, cog
         const entityId = await getEntityId(payload.metadataUrl);
 
         if (entityId) {
+            const resClean = await fetch(samlCleanUrl, {
+                method: "GET", // *GET, POST, PUT, DELETE, etc.
+                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": cognitoToken,
+                },
+            });
+            const resCleanText = await resClean.text();
+            console.log('samlproxy clean result', resClean);
+            console.log('samlproxy clean result text', resCleanText);
+
             const response = await fetch(samlurl, {
                 method: "POST", // *GET, POST, PUT, DELETE, etc.
                 cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
