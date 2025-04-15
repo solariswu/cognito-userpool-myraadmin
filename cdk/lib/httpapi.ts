@@ -199,7 +199,7 @@ export class SSOApiGateway {
     }
 
     private createSPInfoTable() {
-        const table = new Table(this.scope, `${service_name}-${project_name}-${current_stage}-spinfo`, {
+        const table = new Table(this.scope, `${service_name}-${project_name}-spinfo`, {
             partitionKey: { name: 'id', type: AttributeType.STRING },
             billingMode: BillingMode.PAY_PER_REQUEST,
             removalPolicy: RemovalPolicy.DESTROY,
@@ -208,8 +208,8 @@ export class SSOApiGateway {
     }
 
     private createImportUsersJobTable() {
-		const table = new Table(this.scope, `${service_name}-${project_name}-${current_stage}-importjobid`, {
-            tableName: `${service_name}-${project_name}-${current_stage}-importjobid`,
+		const table = new Table(this.scope, `${service_name}-${project_name}-importjobid`, {
+            tableName: `${service_name}-${project_name}-importjobid`,
             partitionKey: { name: 'jobid', type: AttributeType.STRING },
 			billingMode: BillingMode.PAY_PER_REQUEST,
 			removalPolicy: RemovalPolicy.DESTROY,
