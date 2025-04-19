@@ -79,7 +79,7 @@ export const UserCreate = () => {
                         <Grid item xs={12} sm={5} md={5} lg={4}>
                             <TextInput
                                 fullWidth
-                                source="location"
+                                source="locale"
                                 label="City"
                             />
                         </Grid>
