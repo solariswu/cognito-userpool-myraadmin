@@ -262,7 +262,7 @@ export const UserList = (props) => {
               }`
             }
           />
-          <TextField label="City" source="locale" sortable={false} />
+          <TextField label="Location/Address" source="locale" sortable={false} />
           <FunctionField
             label="MFA Channels"
             render={(record) => (

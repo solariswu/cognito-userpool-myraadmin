@@ -257,7 +257,7 @@ export const UserImportListWidget = (props) => {
                 }
               />
             )}
-            {hasCity && <TextField label="City" source="locale" />}
+            {hasCity && <TextField label="Location/Address" source="locale" />}
             {hasMiddleName && <TextField source="middle_name" />}
             {hasName && <TextField source="name" />}
             {hasProfile && <TextField source="profile" />}

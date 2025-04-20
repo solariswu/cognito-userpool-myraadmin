@@ -80,7 +80,7 @@ export const UserCreate = () => {
                             <TextInput
                                 fullWidth
                                 source="locale"
-                                label="City"
+                                label="Location/Address"
                             />
                         </Grid>
                         <Grid item xs={0} sm={1} md={1} lg={0} />

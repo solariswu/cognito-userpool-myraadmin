@@ -187,7 +187,7 @@ export const UserEdit = () => {
                   <TextInput
                     variant="outlined"
                     fullWidth
-                    label="City"
+                    label="Location/Address"
                     source="locale"
                   />
                 </Grid>
