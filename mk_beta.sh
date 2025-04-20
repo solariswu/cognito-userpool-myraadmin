@@ -14,7 +14,6 @@ check_folder() {
             exit 1
         fi
     fi
-    git checkout dev
 }
 
 build_project() {
