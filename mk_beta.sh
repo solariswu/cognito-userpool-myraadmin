@@ -32,7 +32,7 @@ copy_project() {
 }
 
 clean_up() {
-    rm -rf cdk.out .git node_modules src public mk_release.sh config_bak.sh
+    rm -rf cdk.out .git node_modules src public mk_release.sh mk_beta.sh config_bak.sh
     rm -rf cdk/lambda/serviceproviderslist/*.mjs cdk/lambda/serviceproviderslist/dist/*.map
     rm -rf cdk/lambda/samlslist/*.mjs cdk/lambda/samlslist/dist/*.map
     rm -rf cdk/lambda/smtpconfig/*.mjs cdk/lambda/smtpconfig/dist/*.map
