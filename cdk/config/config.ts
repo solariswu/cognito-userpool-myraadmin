@@ -46,7 +46,7 @@ export const enduser_portal_logouturls = [`${process.env.SP_PORTAL_URL}`];
 // manually deployed
 // might change later
 export const samlproxy_base_url = 'https://samlproxy.apersona-id.com/';
-export const api_samlproxy_base_url = 'https://api.samlproxy.apersona.com/'
+export const api_samlproxy_base_url = 'https://api.samlproxy.apersona-id.com/'
 export const samlproxy_api_url = `${api_samlproxy_base_url}samlproxy`;
 export const samlproxy_reload_url = `${api_samlproxy_base_url}reloadsamlproxy`;
 export const samlproxy_clean_url = `${api_samlproxy_base_url}clean`;
