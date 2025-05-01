@@ -22,7 +22,7 @@ const LoginForm = () => {
       </div>
       <div>
         <Typography variant="subtitle1" align="center">
-          AWS Identity Management
+          Identity Management
         </Typography>
         <CardActions >
           <Button
