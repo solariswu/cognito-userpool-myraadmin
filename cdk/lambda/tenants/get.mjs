@@ -38,7 +38,7 @@ export const getResData = async (id, cognitoToken, dynamodb) => {
 
 	console.log('get secret json from amfa', resJson);
 	const smtp = resJson.message;
-	smtp.secure = smtp.secure === 'true' ? true : false;
+	smtp.secure = smtp.secure === "true" || smtp.secure === true ? true : false;
 
 	if (item && item.name) {
 
