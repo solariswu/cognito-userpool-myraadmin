@@ -13,6 +13,50 @@ const assignApplications = async (groups, username, cognitoISP) => {
 		}))))
 }
 
+function getRandomUpper() {
+    return String.fromCharCode(Math.floor(Math.random() * 26) + 65)
+}
+
+function getRandomLower() {
+    return String.fromCharCode(Math.floor(Math.random() * 26) + 97)
+}
+
+function getRandomNumber() {
+    return String.fromCharCode(Math.floor(Math.random() * 10) + 48)
+}
+
+const  randomFunc = {
+    upper: getRandomUpper,
+    lower: getRondomLower,
+    number: getRandomNumber,
+    symbol: getRandomSymbol
+};
+
+
+function generatePassword(lower, upper, number, symbol, length) {
+    console.log(lower, upper, number, symbol, length)
+    let generatedPassword = ''
+    const typesCount = lower + upper + number + symbol
+   //Object.values(item)[0] 获取数组中每个对象的值  
+   // 筛选出值为true(状态为选中的)的大写英文字母、小写英文字母、数字、特殊符号
+    const typesArr = [{lower}, {upper}, {number}, {symbol}].filter(item => Object.values(item)[0] )
+    // 状态都为未选中，则都为flase，加起来就是0；直接返回
+    if(typesCount === 0) {
+        return false
+    }
+
+    for(let i = 0; i < length; i +=  typesCount) {
+        // 遍历循环状态为选中的对象组成的数组，获取每个对象的属性名，根据属性名调用各自生成函数
+        typesArr.forEach(type => {
+            const funcName = Object.keys(type)[0]
+            generatedPassword += randomFunc[funcName]()
+        })
+    }
+    // 截取选择的密码位数长度的随机密码
+    const finalPassword = generatedPassword.slice(0, length)
+    return finalPassword
+}
+
 export const postResData = async (data, cognitoISP) => {
 	console.log('postResData Input:', data);
 	const groups = [];
@@ -75,7 +119,7 @@ export const postResData = async (data, cognitoISP) => {
 	const params = {
 		Username: data['email'].replace('@', '_').replace('.', '_').toLowerCase(),
 		...(!data.notify && { MessageAction: 'SUPPRESS' }),
-		// TemporaryPassword: data.password,
+		TemporaryPassword: generatePassword(true, true, true, true, 10),//data.password,
 		UserAttributes: attributes,
 		UserPoolId: process.env.USERPOOL_ID,
 		DesiredDeliveryMediums: ['EMAIL'],
