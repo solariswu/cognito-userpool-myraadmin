@@ -267,13 +267,14 @@ export const TenantEdit = () => {
             Mobile Token API Settings for aPersona ASM
           </Typography>
           <FunctionField
-            render={(record) => (
-              <DispCardItem
+            render={(record) => {
+              console.log('record', record)
+              return <DispCardItem
                 title={"Mobile Token Client Id"}
                 source={"clientId"}
                 showCopy={record.clientId}
               />
-            )}
+            }}
           />
           <Divider />
           <FunctionField
@@ -450,9 +451,9 @@ export const TenantEdit = () => {
               >
                 <FunctionField
                   render={(record) => (
-                      <Typography variant="h4">
-                        {decodeURIComponent(record.name)}
-                      </Typography>
+                    <Typography variant="h4">
+                      {decodeURIComponent(record.name)}
+                    </Typography>
                   )}
                 />
               </Box>
